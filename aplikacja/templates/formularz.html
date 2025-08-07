@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Formularz</title>
+<style>
+    div{
+            margin-bottom: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+      body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+</style>
+</head>
+<body>
+<h1 style="text-align:center">Dodaj nowy obiekt</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ obiekt_form }}
+
+    <h3>Zdjęcia</h3>
+    {{ foto_formset.management_form }}
+    {% for form in foto_formset %}
+        <div style="margin-bottom: 10px;">
+            {{ form }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Zapisz</button>
+</body>
+</html>

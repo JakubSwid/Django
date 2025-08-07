@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Szczegóły obiektu: {{ obiekt.nazwa_geograficzna_polska }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .pole {
+            margin-bottom: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .zdjecia-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .zdjecie {
+            max-width: 300px;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        a {
+            display: inline-block;
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+         .map-link {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .map-link:hover {
+            text-decoration: underline;
+    </style>
+</head>
+<body>
+    <h1>{{ obiekt.nazwa_geograficzna_polska }}  </h1>
+    {% if obiekt.polozenie_szerokosc and  obiekt.polozenie_dlugosc %}
+    <div class="pole"><strong>Położenie (szerokość, długość):</strong>
+        <a href="https://www.google.com/maps?q={{ obiekt.polozenie_szerokosc }},{{ obiekt.polozenie_dlugosc }}"
+           target="_blank"
+           class="map-link">
+     {{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</a></div>
+    {% endif %}
+
+    <div class="pole"><strong>Powiat:</strong> {{ obiekt.powiat }}</div>
+    <div class="pole"><strong>Data wpisu:</strong> {{ obiekt.data_wpisu }}</div>
+    {% if obiekt.obiekt %}
+        <div class="pole"><strong>Obiekt:</strong> {{ obiekt.obiekt }}</div>
+    {% endif %}
+    {% if obiekt.nazwa_geograficzna_obca %}
+        <div class="pole"><strong>Nazwa geograficzna obca:</strong> {{ obiekt.nazwa_geograficzna_obca }}</div>
+    {% endif %}
+    {% if obiekt.wojewodztwo %}
+        <div class="pole"><strong>Województwo:</strong> {{ obiekt.wojewodztwo }}</div>
+    {% endif %}
+    {% if obiekt.lokalizacja %}
+        <div class="pole"><strong>Lokalizacja:</strong> {{ obiekt.lokalizacja }}</div>
+    {% endif %}
+        <div class="pole"><strong>Typ:</strong> {{ obiekt.typ_obiektu }}</div>
+    {% if obiekt.material %}
+        <div class="pole"><strong>Materiał:</strong> {{ obiekt.material }}</div>
+    {% endif %}
+    {% if obiekt.wysokosc or obiekt.szerokosc %}
+        <div class="pole"><strong>Wymiary (wys. x szer.):</strong> 
+            {{ obiekt.wysokosc|default_if_none:"Brak" }} x {{ obiekt.szerokosc|default_if_none:"Brak" }} m
+        </div>
+    {% endif %}
+    {% if obiekt.opis %}
+        <div class="pole"><strong>Opis:</strong> {{ obiekt.opis }}</div>
+    {% endif %}
+    {% if obiekt.inskrypcja %}
+        <div class="pole"><strong>Inskrypcja:</strong> {{ obiekt.inskrypcja }}</div>
+    {% endif %}
+    {% if obiekt.typ_pisma %}
+        <div class="pole"><strong>Typ pisma:</strong> {{ obiekt.typ_pisma }}</div>
+    {% endif %}
+    {% if obiekt.tlumaczenie %}
+        <div class="pole"><strong>Tłumaczenie:</strong> {{ obiekt.tlumaczenie }}</div>
+    {% endif %}
+    {% if obiekt.herby %}
+        <div class="pole"><strong>Herby:</strong> {{ obiekt.herby }}</div>
+    {% endif %}
+    {% if obiekt.genealogia %}
+        <div class="pole"><strong>Genealogia:</strong> {{ obiekt.genealogia }}</div>
+    {% endif %}
+    {% if obiekt.bibliografia %}
+        <div class="pole"><strong>Bibliografia:</strong> {{ obiekt.bibliografia }}</div>
+    {% endif %}
+    {% if obiekt.odsyłacze_do_zrodla %}
+        <div class="pole"><strong>Odsyłacze do źródła:</strong> {{ obiekt.odsyłacze_do_zrodla }}</div>
+    {% endif %}
+    {% if obiekt.autorzy_wpisu %}
+        <div class="pole"><strong>Autorzy wpisu:</strong> {{ obiekt.autorzy_wpisu }}</div>
+    {% endif %}
+    {% if obiekt.korekta_nr_1_autor %}
+        <div class="pole"><strong>Korekta nr 1 (autor):</strong> {{ obiekt.korekta_nr_1_autor }}</div>
+    {% endif %}
+    {% if obiekt.data_korekty_1 %}
+        <div class="pole"><strong>Data korekty 1:</strong> {{ obiekt.data_korekty_1 }}</div>
+    {% endif %}
+    {% if obiekt.korekta_nr_2_autor %}
+        <div class="pole"><strong>Korekta nr 2 (autor):</strong> {{ obiekt.korekta_nr_2_autor }}</div>
+    {% endif %}
+    {% if obiekt.data_korekty_2 %}
+        <div class="pole"><strong>Data korekty 2:</strong> {{ obiekt.data_korekty_2 }}</div>
+    {% endif %}
+    {% if obiekt.imie_nazwisko_osoby_upamietnionej %}
+        <div class="pole"><strong>Imię i nazwisko osoby upamiętnionej:</strong> {{ obiekt.imie_nazwisko_osoby_upamietnionej }}</div>
+    {% endif %}
+    {% if obiekt.skan_3d %}
+        <div class="pole"><strong>Skan 3D:</strong> <a href="{{ obiekt.skan_3d }}">{{ obiekt.skan_3d }}</a></div>
+    {% endif %}
+
+   {% if zdjecia %}
+        <h2>Zdjęcia ({{ zdjecia|length }}/10)</h2>
+        <div class="zdjecia-container">
+            {% for zdjecie in zdjecia %}
+                <div>
+                    <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie" onclick="openLightbox('{{ zdjecie.plik.url }}')">
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <a href="{% url 'rekordy' %}" style="margin-top: 20px">Powrót do listy</a>
+
+  <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img id="lightbox-img" src="" alt="Powiększone zdjęcie">
+    </div>
+
+
+
+  <script>
+      //Skrypt do powiększania zdjęć
+
+        document.addEventListener('DOMContentLoaded', function() {
+            function openLightbox(imgSrc) {
+                const lightbox = document.getElementById('lightbox');
+                const lightboxImg = document.getElementById('lightbox-img');
+                if (lightboxImg) {
+                    lightboxImg.src = imgSrc;
+                    lightbox.style.display = 'flex';
+                } else {
+                    console.error('Element #lightbox-img not found');
+                }
+            }
+
+            function closeLightbox() {
+                const lightbox = document.getElementById('lightbox');
+                lightbox.style.display = 'none';
+            }
+
+
+            window.openLightbox = openLightbox;
+            window.closeLightbox = closeLightbox;
+        });
+    </script>
+</body>
+</html>

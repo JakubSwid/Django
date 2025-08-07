@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+   <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .obiekt-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .obiekt-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .obiekt-card h2 {
+            font-size: 1.5em;
+            margin: 0 0 10px;
+            color: #2c3e50;
+        }
+        .obiekt-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .zdjecia-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .zdjecie {
+            max-width: 100px;
+            height: auto;
+            border-radius: 4px;
+        }
+        .add-link {
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .add-link:hover {
+            background: #2980b9;
+        }
+         </style>
+</head>
+<body>
+ <h1>Lista obiektów</h1>
+    {% if obiekty %}
+        <div class="obiekt-container">
+            {% for obiekt in obiekty %}
+                <div class="obiekt-card">
+                    <h2><a href="{% url 'szczegoly_obiektu' obiekt.id %}">{{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}</a></h2>
+                    <p><strong>Położenie (szerokość, długość):</strong> {{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</p>
+                    <p><strong>Powiat:</strong> {{ obiekt.powiat }}</p>
+                    <p><strong>Województwo:</strong> {{ obiekt.wojewodztwo|default:"Brak" }}</p>
+                    <p><strong>Lokalizacja:</strong> {{ obiekt.lokalizacja|default:"Brak" }}</p>
+                    <p><strong>Materiał:</strong> {{ obiekt.material|default:"Brak" }}</p>
+                    <p><strong>Wymiary (wys. x szer.):</strong> {{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</p>
+                    <p><strong>Opis:</strong> {{ obiekt.opis|truncatewords:20|default:"Brak" }}</p>
+                    <p><strong>Data wpisu:</strong> {{ obiekt.data_wpisu }}</p>
+                    <h3>Zdjęcia ({{ obiekt.zdjecia.count }}/10)</h3>
+                    {% if obiekt.zdjecia.all %}
+                        <div class="zdjecia-container">
+                            {% for zdjecie in obiekt.zdjecia.all %}
+                                <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie">
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>Brak zdjęć</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Brak obiektów w bazie danych.</p>
+    {% endif %}
+
+</body>
+</html>
