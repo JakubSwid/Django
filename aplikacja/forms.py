@@ -7,16 +7,31 @@ class ObiektForm(forms.ModelForm):
         model = Obiekt
         fields = '__all__'
         widgets = {
-            'data_wpisu': forms.DateInput(attrs={'type': 'date'}),
-            'data_korekty_1': forms.DateInput(attrs={'type': 'date'}),
-            'data_korekty_2': forms.DateInput(attrs={'type': 'date'}),
-            'opis': forms.Textarea(attrs={'rows': 4}),
-            'inskrypcja': forms.Textarea(attrs={'rows': 4}),
-            'tlumaczenie': forms.Textarea(attrs={'rows': 4}),
-            'herby': forms.Textarea(attrs={'rows': 4}),
-            'genealogia': forms.Textarea(attrs={'rows': 4}),
-            'bibliografia': forms.Textarea(attrs={'rows': 4}),
-            'odsylacze_do_zrodla': forms.Textarea(attrs={'rows': 4}),
+            'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków'}),
+            'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski'}),
+            'typ_obiektu': forms.TextInput(attrs={'placeholder': 'Np. płyta epitafijna'}),
+            'polozenie_szerokosc': forms.NumberInput(attrs={'placeholder': 'Np. 50.0547', 'step': 'any'}),
+            'polozenie_dlugosc': forms.NumberInput(attrs={'placeholder': 'Np. 19.9354', 'step': 'any'}),
+            'obiekt': forms.TextInput(attrs={'placeholder': 'Np. Katedra Wawelska'}),
+            'nazwa_geograficzna_obca': forms.TextInput(attrs={'placeholder': 'Np. Grünberg'}),
+            'wojewodztwo': forms.TextInput(attrs={'placeholder': 'Np. lubuskie'}),
+            'lokalizacja': forms.TextInput(attrs={'placeholder': 'Np. Nawa boczna katedry'}),
+            'material': forms.TextInput(attrs={'placeholder': 'Np. marmur'}),
+            'wysokosc': forms.NumberInput(attrs={'placeholder': 'Np. 1.5', 'step': 'any'}),
+            'szerokosc': forms.NumberInput(attrs={'placeholder': 'Np. 1.0', 'step': 'any'}),
+            'opis': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Płyta epitafijna upamiętniająca króla'}),
+            'inskrypcja': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Hic iacet Joannes III Sobieski'}),
+            'typ_pisma': forms.TextInput(attrs={'placeholder': 'Np. gotyckie'}),
+            'tlumaczenie': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Tu spoczywa Jan III Sobieski'}),
+            'herby': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Herb Sobieskich – Janina'}),
+            'genealogia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Syn Jakuba Sobieskiego'}),
+            'bibliografia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. K. Kowalski, "Historia Wawelu"'}),
+            'odsyłacze_do_zrodla': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. https://wawel.pl/historia'}),
+            'data_wpisu': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'data_korekty_1': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski'}),
+            'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan'}),
         }
 
 class FotoForm(forms.ModelForm):
@@ -24,12 +39,12 @@ class FotoForm(forms.ModelForm):
         model = Foto
         fields = ['plik']
 
-
 FotoFormSet = inlineformset_factory(
     Obiekt, Foto,
     form=FotoForm,
-    extra=1,
+    extra=0,
+    min_num=1,  # Require at least 1 photo
+    validate_min=True,
     max_num=10,
-    can_delete=True
-)
 
+)

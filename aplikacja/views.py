@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
+from django.contrib import messages
 from .models import Obiekt
 from .forms import ObiektForm, FotoFormSet
 
@@ -32,7 +33,11 @@ def formularz(request):
                 foto.obiekt = obiekt
                 foto.save()
 
-            return redirect('rekordy')  # zamień na swój URL
+            messages.success(request, 'Obiekt został pomyślnie dodany!')
+            return redirect('rekordy')
+        else:
+            if not foto_formset.is_valid():
+                messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
         obiekt_form = ObiektForm()
         foto_formset = FotoFormSet()

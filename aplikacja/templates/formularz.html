@@ -3,36 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <title>Formularz</title>
-<style>
-    div{
+    <style>
+        div {
             margin-bottom: 10px;
             background: white;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-      body {
+        body {
             font-family: Arial, sans-serif;
             margin: 50px;
             background-color: #f4f4f4;
         }
-</style>
+        .foto-item {
+            margin-bottom: 10px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+        }
+        .delete-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-<h1 style="text-align:center">Dodaj nowy obiekt</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+    <h1 style="text-align:center">Dodaj nowy obiekt</h1>
 
-    {{ obiekt_form }}
+    {% if messages %}
+        {% for message in messages %}
+            <div style="color: red;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
-    <h3>Zdjęcia</h3>
-    {{ foto_formset.management_form }}
-    {% for form in foto_formset %}
-        <div style="margin-bottom: 10px;">
-            {{ form }}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ obiekt_form }}
+
+        <h3>Zdjęcia (1-10)</h3>
+        {{ foto_formset.management_form }}
+        <div id="foto-forms">
+            {% for form in foto_formset %}
+                <div class="foto-item">
+                    {{ form.plik }}
+                    <button type="button" class="delete-btn" onclick="deleteFoto(this)">Usuń</button>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
 
-    <button type="submit">Zapisz</button>
+        <button type="button" onclick="addPhoto()">Dodaj zdjęcie</button>
+        <button type="submit">Zapisz</button>
+    </form>
+
+    <script>
+        let formCount = {{ foto_formset.total_form_count }};
+
+        function addPhoto() {
+            if (formCount >= 10) {
+                alert('Maksymalnie 10 zdjęć');
+                return;
+            }
+
+            const formContainer = document.getElementById('foto-forms');
+            const newForm = document.createElement('div');
+            newForm.className = 'foto-item';
+            newForm.innerHTML = `
+                <input type="file" name="zdjecia-${formCount}-plik" accept="image/*">
+                <input type="hidden" name="zdjecia-${formCount}-DELETE" value="">
+                <button type="button" class="delete-btn" onclick="deleteFoto(this)">Usuń</button>
+            `;
+
+            formContainer.appendChild(newForm);
+            formCount++;
+            document.querySelector('#id_zdjecia-TOTAL_FORMS').value = formCount;
+        }
+
+        function deleteFoto(button) {
+            const fotoItem = button.parentElement;
+            const deleteInput = fotoItem.querySelector('input[name$="-DELETE"]');
+
+            if (deleteInput) {
+                deleteInput.value = 'on';
+                fotoItem.style.display = 'none';
+            } else {
+                fotoItem.remove();
+            }
+        }
+    </script>
 </body>
 </html>
