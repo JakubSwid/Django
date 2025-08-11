@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wyszukaj</title>
+</head>
+<body>
+{% load static %}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyszukiwarka Obiektów</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <h1 style="float:left">Wyszukiwarka Obiektów</h1>
+    <a href="{{ 'rekordy' }}" <h1 style="float:right">Wszystkie obiekty</h1></a>
+    <div style="clear:both"></div>
+    <form method="GET" action="">
+        <div class="search-container">
+            <div class="search-field">
+                <label for="search_query">Szukaj (nazwa, opis, inskrypcja):</label>
+                <input type="text" id="search_query" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Wpisz frazę...">
+            </div>
+
+            <div class="search-field">
+                <label for="wojewodztwo">Województwo:</label>
+                <input type="text" id="wojewodztwo" name="wojewodztwo" value="{{ request.GET.wojewodztwo|default:'' }}" placeholder="Np. Mazowieckie">
+            </div>
+
+            <div class="search-field">
+                <label for="powiat">Powiat:</label>
+                <input type="text" id="powiat" name="powiat" value="{{ request.GET.powiat|default:'' }}" placeholder="Np. Warszawski">
+            </div>
+
+            <div class="search-field">
+                <label for="typ_obiektu">Typ obiektu:</label>
+                <input type="text" id="typ_obiektu" name="typ_obiektu" value="{{ request.GET.typ_obiektu|default:'' }}" placeholder="Np. Pomnik">
+            </div>
+
+            <div class="search-field">
+                <label for="material">Materiał:</label>
+                <input type="text" id="material" name="material" value="{{ request.GET.material|default:'' }}" placeholder="Np. Kamień">
+            </div>
+
+            <button type="submit">Szukaj</button>
+        </div>
+    </form>
+
+    <h2>Wyniki wyszukiwania</h2>
+
+    {% if obiekty %}
+         <div class="results-container">
+            {% for obiekt in obiekty %}
+                <div class="object-card">
+                    <h3><a href="{% url 'szczegoly_obiektu' obiekt.id %}">{{ obiekt.nazwa_geograficzna_polska }}</a> - {{ obiekt.typ_obiektu }}</h3>
+                    <p><strong>Położenie (szerokość, długość):</strong>
+                        {{ obiekt.polozenie_szerokosc|floatformat:6|default:"Brak" }},
+                        {{ obiekt.polozenie_dlugosc|floatformat:6|default:"Brak" }}</p>
+                    <p><strong>Powiat:</strong> {{ obiekt.powiat|default:"Brak" }}</p>
+                    <p><strong>Województwo:</strong> {{ obiekt.wojewodztwo|default:"Brak" }}</p>
+                    <p><strong>Lokalizacja:</strong> {{ obiekt.lokalizacja|default:"Brak" }}</p>
+                    <p><strong>Materiał:</strong> {{ obiekt.material|default:"Brak" }}</p>
+                    <p><strong>Wymiary (wys. x szer.):</strong>
+                        {{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</p>
+                    <p><strong>Opis:</strong> {{ obiekt.opis|truncatewords:20|default:"Brak" }}</p>
+                    <p><strong>Data wpisu:</strong> {{ obiekt.data_wpisu|default:"Brak" }}</p>
+                    <p><strong>Zdjęcia ({{ obiekt.zdjecia.count }}/10):</strong></p>
+                    {% if obiekt.zdjecia.all %}
+                        <div class="photos">
+                            {% for zdjecie in obiekt.zdjecia.all %}
+                                <img src="{{ zdjecie.plik.url }}" alt="Zdjęcie {{ obiekt.nazwa_geograficzna_polska }}" width="100">
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>Brak zdjęć</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Brak obiektów spełniających kryteria wyszukiwania.</p>
+    {% endif %}
+
+    <style>
+        .search-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .search-field {
+            margin-bottom: 10px;
+        }
+        .search-field label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        .search-field input {
+            width: 300px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results-container {
+            margin-top: 20px;
+        }
+        .object-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .photos img {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</body>
+</html>
+</body>
+</html>

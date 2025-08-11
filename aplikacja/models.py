@@ -53,4 +53,8 @@ class Foto(models.Model):
     def __str__(self):
         return f"Zdjęcie ({self.plik.name})"
 
+    class Meta:
+        verbose_name = "Zdjęcie"
+        verbose_name_plural = "Zdjęcia"
+
 

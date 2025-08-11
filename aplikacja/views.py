@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages
 from .models import Obiekt
+from django.db.models import Q
 from .forms import ObiektForm, FotoFormSet
 
 def test(request):
@@ -18,6 +19,42 @@ def szczegoly_obiektu(request, obiekt_id):
 def rekordy(request):
     obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
     return render(request, 'rekordy.html', {'obiekty': obiekty})
+
+
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+
+def wyszukaj(request):
+    query = request.GET.get('q', '')
+    wojewodztwo = request.GET.get('wojewodztwo', '')
+    powiat = request.GET.get('powiat', '')
+    typ_obiektu = request.GET.get('typ_obiektu', '')
+    material = request.GET.get('material', '')
+
+    obiekty = Obiekt.objects.all()
+
+    # Fuzzy search using Q objects for general query
+    if query:
+        obiekty = obiekty.filter(
+            Q(nazwa_geograficzna_polska__icontains=query) |
+            Q(opis__icontains=query) |
+            Q(inskrypcja__icontains=query)
+        )
+
+    # Additional filters
+    if wojewodztwo:
+        obiekty = obiekty.filter(wojewodztwo__icontains=wojewodztwo)
+    if powiat:
+        obiekty = obiekty.filter(powiat__icontains=powiat)
+    if typ_obiektu:
+        obiekty = obiekty.filter(typ_obiektu__icontains=typ_obiektu)
+    if material:
+        obiekty = obiekty.filter(material__icontains=material)
+
+    context = {
+        'obiekty': obiekty,
+        'request': request
+    }
+    return render(request, 'main.html', context)
 
 def formularz(request):
     if request.method == 'POST':
