@@ -2,6 +2,7 @@ from django import forms
 from .models import Obiekt, Foto
 from django.forms import inlineformset_factory
 
+
 class ObiektForm(forms.ModelForm):
     class Meta:
         model = Obiekt
@@ -48,3 +49,17 @@ FotoFormSet = inlineformset_factory(
     max_num=10,
 
 )
+
+class ObiektFilterForm(forms.Form):
+    wojewodztwo = forms.ChoiceField(choices=[], required=False, label='Województwo')
+    powiat = forms.ChoiceField(choices=[], required=False, label='Powiat')
+    lokalizacja = forms.ChoiceField(choices=[], required=False, label='Lokalizacja')
+    typ_obiektu = forms.ChoiceField(choices=[], required=False, label='Typ obiektu')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['wojewodztwo'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('wojewodztwo', flat=True).distinct().order_by('wojewodztwo') if v]
+        self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('powiat', flat=True).distinct().order_by('powiat') if v]
+        self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('lokalizacja', flat=True).distinct().order_by('lokalizacja') if v]
+        self.fields['typ_obiektu'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('typ_obiektu', flat=True).distinct().order_by('typ_obiektu') if v]

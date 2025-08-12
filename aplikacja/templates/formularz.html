@@ -65,8 +65,8 @@
         let formCount = {{ foto_formset.total_form_count }};
 
         function addPhoto() {
-            if (formCount >= 10) {
-                alert('Maksymalnie 10 zdjęć');
+            if (formCount > 8) {
+                alert('Maksymalnie 8 zdjęć');
                 return;
             }
 

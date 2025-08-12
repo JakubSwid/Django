@@ -62,7 +62,19 @@
          </style>
 </head>
 <body>
- <h1>Lista obiektów</h1>
+
+<div style="float: left; width: 20%; border-right: 1px solid #ccc; padding-right: 10px;">
+    <h2>Filtry</h2>
+    <form method="get" id="filter-form">
+        {{ form.as_p }}
+        <button type="submit">Filtruj</button>
+        <h2>  <a href="{{ '/' }}"> Wyszukiwarka</a></h2>
+    </form>
+</div>
+
+ <h1 >Lista obiektów</h1>
+
+
     {% if obiekty %}
         <div class="obiekt-container">
             {% for obiekt in obiekty %}

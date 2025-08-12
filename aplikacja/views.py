@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.contrib import messages
 from .models import Obiekt
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm
 
 def test(request):
     return HttpResponse("Hello world!")
@@ -17,8 +17,17 @@ def szczegoly_obiektu(request, obiekt_id):
     })
 
 def rekordy(request):
+    form = ObiektFilterForm(request.GET or None)
     obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
-    return render(request, 'rekordy.html', {'obiekty': obiekty})
+    if form.is_valid():
+        # Zbierz filtry (pomijaj puste wartości)
+        filters = {}
+        for field in ['wojewodztwo', 'powiat', 'lokalizacja', 'typ_obiektu']:
+            value = form.cleaned_data.get(field)
+            if value:
+                filters[field] = value
+        obiekty = obiekty.filter(**filters)
+    return render(request, 'rekordy.html', {'obiekty': obiekty, 'form': form})
 
 
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank

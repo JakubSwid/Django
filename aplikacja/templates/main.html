@@ -25,6 +25,10 @@
                 <input type="text" id="search_query" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Wpisz frazę...">
             </div>
 
+
+
+            <div id="advancedFilters" class="advanced-filters">
+
             <div class="search-field">
                 <label for="wojewodztwo">Województwo:</label>
                 <input type="text" id="wojewodztwo" name="wojewodztwo" value="{{ request.GET.wojewodztwo|default:'' }}" placeholder="Np. Mazowieckie">
@@ -45,8 +49,11 @@
                 <input type="text" id="material" name="material" value="{{ request.GET.material|default:'' }}" placeholder="Np. Kamień">
             </div>
 
-            <button type="submit">Szukaj</button>
+
         </div>
+         <button id="filtr" type="button" onclick="toggleAdvancedFilters()" style="margin-bottom: 10px">Filtry zaawansowane</button>
+        </div>
+<button type="submit">Szukaj</button>
     </form>
 
     <h2>Wyniki wyszukiwania</h2>
@@ -84,7 +91,24 @@
         <p>Brak obiektów spełniających kryteria wyszukiwania.</p>
     {% endif %}
 
+      <script>
+        function toggleAdvancedFilters() {
+            const advancedFilters = document.getElementById('advancedFilters');
+            const filtr = document.getElementById('filtr');
+
+            const isActive = advancedFilters.classList.toggle('active');
+
+            filtr.textContent = isActive ? 'Schowaj filtry' : 'Filtry zaawansowane';
+        }
+    </script>
+
     <style>
+          .advanced-filters {
+            display: none;
+        }
+        .advanced-filters.active {
+            display: block;
+        }
         .search-container {
             margin: 20px 0;
             padding: 20px;
