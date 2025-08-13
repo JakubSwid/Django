@@ -498,7 +498,7 @@
             <h2><i class="fas fa-list-ul"></i> Wyniki wyszukiwania</h2>
         </div>
 
-        {% if obiekty %}
+        {% if obiekty and request %}
             <div class="results-container">
                 {% for obiekt in obiekty %}
                     <div class="object-card">

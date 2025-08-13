@@ -39,10 +39,13 @@ def wyszukaj(request):
     typ_obiektu = request.GET.get('typ_obiektu', '')
     material = request.GET.get('material', '')
 
-    obiekty = Obiekt.objects.all()
+    if not any([query, wojewodztwo, powiat, typ_obiektu, material]):
+        obiekty = Obiekt.objects.none()
+    else:
+        obiekty = Obiekt.objects.all()
 
     # Fuzzy search using Q objects for general query
-    if query:
+    if query!="":
         obiekty = obiekty.filter(
             Q(nazwa_geograficzna_polska__icontains=query) |
             Q(opis__icontains=query) |
@@ -58,6 +61,7 @@ def wyszukaj(request):
         obiekty = obiekty.filter(typ_obiektu__icontains=typ_obiektu)
     if material:
         obiekty = obiekty.filter(material__icontains=material)
+
 
     context = {
         'obiekty': obiekty,
