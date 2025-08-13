@@ -2,108 +2,353 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-   <style>
+    <title>Lista Obiektów</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-brown: #8B4513;
+            --light-brown: #D2B48C;
+            --beige: #F5F5DC;
+            --cream: #FFF8DC;
+            --dark-brown: #654321;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--beige) 100%);
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
         }
-        h1 {
-            color: #333;
-            text-align: center;
+
+        .sidebar {
+            background: linear-gradient(180deg, #fff 0%, var(--beige) 100%);
+            border-right: 3px solid var(--light-brown);
+            box-shadow: 2px 0 10px rgba(139, 69, 19, 0.1);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            z-index: 1000;
+            overflow-y: auto;
         }
-        .obiekt-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+
+        .sidebar h2 {
+            color: var(--primary-brown);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            border-bottom: 2px solid var(--light-brown);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            margin-left: 300px;
             padding: 20px;
         }
-        .obiekt-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .obiekt-card h2 {
-            font-size: 1.5em;
-            margin: 0 0 10px;
-            color: #2c3e50;
-        }
-        .obiekt-card p {
-            margin: 5px 0;
-            color: #555;
-        }
-        .zdjecia-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .zdjecie {
-            max-width: 100px;
-            height: auto;
-            border-radius: 4px;
-        }
-        .add-link {
-            display: inline-block;
-            margin: 20px auto;
-            text-align: center;
-            background: #3498db;
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--dark-brown) 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 40px 0;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.3);
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 0;
+        }
+
+        .obiekt-card {
+            background: linear-gradient(145deg, #fff 0%, var(--cream) 100%);
+            border: 2px solid var(--light-brown);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.15);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .obiekt-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(139, 69, 19, 0.25);
+            border-color: var(--primary-brown);
+        }
+
+        .obiekt-card .card-header {
+            background: linear-gradient(135deg, var(--light-brown) 0%, var(--beige) 100%);
+            border-bottom: 2px solid var(--primary-brown);
+            padding: 20px;
+        }
+
+        .obiekt-card h2 {
+            color: var(--dark-brown);
+            font-size: 1.4rem;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .obiekt-card h2 a {
+            color: var(--dark-brown);
             text-decoration: none;
-            border-radius: 5px;
+            transition: color 0.3s ease;
         }
-        .add-link:hover {
-            background: #2980b9;
+
+        .obiekt-card h2 a:hover {
+            color: var(--primary-brown);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
-         </style>
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-item i {
+            color: var(--primary-brown);
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: var(--dark-brown);
+            min-width: 140px;
+        }
+
+        .info-value {
+            color: #555;
+            flex: 1;
+        }
+
+        .zdjecia-container {
+            padding: 15px 0;
+        }
+
+        .zdjecie {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--light-brown);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .zdjecie:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-brown);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .photos-header {
+            color: var(--primary-brown);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .photos-header i {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--dark-brown) 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+            background: linear-gradient(135deg, var(--dark-brown) 0%, var(--primary-brown) 100%);
+        }
+
+        .search-link {
+            background: linear-gradient(135deg, var(--beige) 0%, var(--light-brown) 100%);
+            color: var(--dark-brown);
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid var(--light-brown);
+        }
+
+        .search-link:hover {
+            background: linear-gradient(135deg, var(--light-brown) 0%, var(--primary-brown) 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .no-objects {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--primary-brown);
+            font-size: 1.2rem;
+            background: white;
+            border-radius: 15px;
+            border: 2px dashed var(--light-brown);
+        }
+
+        .filter-form {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div style="float: left; width: 20%; border-right: 1px solid #ccc; padding-right: 10px;">
-    <h2>Filtry</h2>
-    <form method="get" id="filter-form">
-        {{ form.as_p }}
-        <button type="submit">Filtruj</button>
-        <h2>  <a href="{{ '/' }}"> Wyszukiwarka</a></h2>
-    </form>
+<div class="sidebar">
+    <div class="p-4">
+        <h2><i class="fas fa-filter"></i> Filtry</h2>
+        <div class="filter-form">
+            <form method="get" id="filter-form">
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary w-100 mb-3">
+                    <i class="fas fa-search"></i> Filtruj
+                </button>
+            </form>
+        </div>
+        <h2><i class="fas fa-search"></i> Wyszukiwarka</h2>
+        <a href="{{ '/' }}" class="search-link w-100 text-center">
+            <i class="fas fa-home"></i> Wyszukiwarka
+        </a>
+    </div>
 </div>
 
- <h1 >Lista obiektów</h1>
-
+<div class="main-content">
+    <div class="page-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-monument"></i> Lista Obiektów</h1>
+            <p class="lead mb-0">Przeglądaj kolekcję historycznych obiektów i pomników</p>
+        </div>
+    </div>
 
     {% if obiekty %}
-        <div class="obiekt-container">
+        <div class="row g-4">
             {% for obiekt in obiekty %}
-                <div class="obiekt-card">
-                    <h2><a href="{% url 'szczegoly_obiektu' obiekt.id %}">{{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}</a></h2>
-                    <p><strong>Położenie (szerokość, długość):</strong> {{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</p>
-                    <p><strong>Powiat:</strong> {{ obiekt.powiat }}</p>
-                    <p><strong>Województwo:</strong> {{ obiekt.wojewodztwo|default:"Brak" }}</p>
-                    <p><strong>Lokalizacja:</strong> {{ obiekt.lokalizacja|default:"Brak" }}</p>
-                    <p><strong>Materiał:</strong> {{ obiekt.material|default:"Brak" }}</p>
-                    <p><strong>Wymiary (wys. x szer.):</strong> {{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</p>
-                    <p><strong>Opis:</strong> {{ obiekt.opis|truncatewords:20|default:"Brak" }}</p>
-                    <p><strong>Data wpisu:</strong> {{ obiekt.data_wpisu }}</p>
-                    <h3>Zdjęcia ({{ obiekt.zdjecia.count }}/10)</h3>
-                    {% if obiekt.zdjecia.all %}
-                        <div class="zdjecia-container">
-                            {% for zdjecie in obiekt.zdjecia.all %}
-                                <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie">
-                            {% endfor %}
+                <div class="col-lg-6 col-xl-4">
+                    <div class="obiekt-card card h-100">
+                        <div class="card-header">
+                            <h2>
+                                <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
+                                    {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}
+                                </a>
+                            </h2>
                         </div>
-                    {% else %}
-                        <p>Brak zdjęć</p>
-                    {% endif %}
+                        <div class="card-body">
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span class="info-label">Położenie:</span>
+                                <span class="info-value">{{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-map"></i>
+                                <span class="info-label">Powiat:</span>
+                                <span class="info-value">{{ obiekt.powiat }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-flag"></i>
+                                <span class="info-label">Województwo:</span>
+                                <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-location-dot"></i>
+                                <span class="info-label">Lokalizacja:</span>
+                                <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-cube"></i>
+                                <span class="info-label">Materiał:</span>
+                                <span class="info-value">{{ obiekt.material|default:"Brak" }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-ruler-combined"></i>
+                                <span class="info-label">Wymiary:</span>
+                                <span class="info-value">{{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-align-left"></i>
+                                <span class="info-label">Opis:</span>
+                                <span class="info-value">{{ obiekt.opis|truncatewords:20|default:"Brak" }}</span>
+                            </div>
+
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                <span class="info-label">Data wpisu:</span>
+                                <span class="info-value">{{ obiekt.data_wpisu }}</span>
+                            </div>
+
+                            <div class="photos-header">
+                                <i class="fas fa-images"></i>
+                                Zdjęcia ({{ obiekt.zdjecia.count }}/10)
+                            </div>
+
+                            {% if obiekt.zdjecia.all %}
+                                <div class="zdjecia-container">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for zdjecie in obiekt.zdjecia.all %}
+                                            <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie">
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-exclamation-circle"></i> Brak zdjęć
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>Brak obiektów w bazie danych.</p>
+        <div class="no-objects">
+            <i class="fas fa-search fa-3x mb-3"></i>
+            <h3>Brak obiektów w bazie danych</h3>
+            <p>Spróbuj zmienić kryteria wyszukiwania lub dodaj nowe obiekty.</p>
+        </div>
     {% endif %}
+</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
