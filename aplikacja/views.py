@@ -4,6 +4,10 @@ from django.contrib import messages
 from .models import Obiekt
 from django.db.models import Q
 from .forms import ObiektForm, FotoFormSet, ObiektFilterForm
+from .utils import import_objects_from_csv
+from django.core.files.storage import FileSystemStorage
+import os
+
 
 def test(request):
     return HttpResponse("Hello world!")
@@ -96,3 +100,42 @@ def formularz(request):
         'obiekt_form': obiekt_form,
         'foto_formset': foto_formset
     })
+
+
+from django.shortcuts import render
+from django.core.files.storage import FileSystemStorage
+from django.contrib import messages
+from .utils import import_objects_from_csv  # Zakładam, że funkcja jest w pliku utils.py
+
+
+def import_csv_view(request):
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+
+        # Zapisz przesłany plik tymczasowo
+        fs = FileSystemStorage()
+        filename = fs.save(csv_file.name, csv_file)
+        file_path = fs.path(filename)
+
+        try:
+            # Wywołaj funkcję importu
+            success_count, error_count, error_messages = import_objects_from_csv(file_path)
+
+            # Przekaż wyniki do użytkownika
+            if success_count > 0:
+                messages.success(request, f"Zaimportowano {success_count} obiektów.")
+            if error_count > 0:
+                for error in error_messages:
+                    messages.error(request, error)
+
+        except Exception as e:
+            messages.error(request, f"Błąd podczas importu: {str(e)}")
+
+        finally:
+            # Usuń tymczasowy plik
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+        return render(request, 'import_csv.html')
+
+    return render(request, 'import_csv.html')
