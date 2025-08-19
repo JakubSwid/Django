@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from .models import Obiekt
 from django.db.models import Q
 from .forms import ObiektForm, FotoFormSet, ObiektFilterForm
-from .utils import import_objects_from_csv
+from .utils import import_objects_from_csv, save_uploaded_photos
 from django.core.files.storage import FileSystemStorage
 import os
+import tempfile
 
 
 def test(request):
@@ -102,40 +103,51 @@ def formularz(request):
     })
 
 
-from django.shortcuts import render
-from django.core.files.storage import FileSystemStorage
-from django.contrib import messages
-from .utils import import_objects_from_csv  # Zakładam, że funkcja jest w pliku utils.py
-
-
 def import_csv_view(request):
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        csv_file = request.FILES['csv_file']
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+        photos_files = request.FILES.getlist('photos_folder')
 
-        # Zapisz przesłany plik tymczasowo
-        fs = FileSystemStorage()
-        filename = fs.save(csv_file.name, csv_file)
-        file_path = fs.path(filename)
+        if not csv_file:
+            messages.error(request, 'Proszę wybrać plik CSV.')
+            return HttpResponseRedirect(request.path)
 
         try:
-            # Wywołaj funkcję importu
-            success_count, error_count, error_messages = import_objects_from_csv(file_path)
+            # Save CSV file temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_csv:
+                for chunk in csv_file.chunks():
+                    temp_csv.write(chunk)
+                temp_csv_path = temp_csv.name
 
-            # Przekaż wyniki do użytkownika
+            # Save uploaded photos to temporary directory
+            photos_base_dir = None
+            if photos_files:
+                photos_base_dir = save_uploaded_photos(photos_files)
+
+            # Import data
+            success_count, error_count, error_messages = import_objects_from_csv(
+                temp_csv_path,
+                photos_base_dir
+            )
+
+            # Clean up temporary files
+            os.unlink(temp_csv_path)
+            if photos_base_dir:
+                import shutil
+                shutil.rmtree(photos_base_dir, ignore_errors=True)
+
+            # Show results
             if success_count > 0:
-                messages.success(request, f"Zaimportowano {success_count} obiektów.")
+                messages.success(request, f'Pomyślnie zaimportowano {success_count} obiektów.')
+
             if error_count > 0:
-                for error in error_messages:
-                    messages.error(request, error)
+                messages.warning(request, f'Wystąpiło {error_count} błędów podczas importu.')
+                for error_msg in error_messages[:10]:  # Show first 10 errors
+                    messages.error(request, error_msg)
 
         except Exception as e:
-            messages.error(request, f"Błąd podczas importu: {str(e)}")
+            messages.error(request, f'Błąd podczas importu: {str(e)}')
 
-        finally:
-            # Usuń tymczasowy plik
-            if os.path.exists(file_path):
-                os.remove(file_path)
-
-        return render(request, 'import_csv.html')
+        return HttpResponseRedirect(request.path)
 
     return render(request, 'import_csv.html')

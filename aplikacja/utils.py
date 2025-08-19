@@ -1,18 +1,77 @@
 import csv
+import os
+import tempfile
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.core.files import File
-import os
-from django.conf import settings  # Import settings for MEDIA_ROOT
+from django.conf import settings
 from .models import Obiekt, Foto
 
 
-def import_objects_from_csv(file_path):
+def save_uploaded_photos(uploaded_files):
+    """
+    Save uploaded photos to a temporary directory and return the path.
+
+    Args:
+        uploaded_files: List of uploaded photo files
+
+    Returns:
+        str: Path to temporary directory containing photos
+    """
+    if not uploaded_files:
+        return None
+
+    # Create temporary directory for photos
+    temp_dir = tempfile.mkdtemp(prefix='import_photos_')
+
+    for uploaded_file in uploaded_files:
+        # Get the relative path from the uploaded file
+        # webkitdirectory preserves folder structure in file.name
+        file_path = os.path.join(temp_dir, uploaded_file.name)
+
+        # Create directories if they don't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Save the file
+        with open(file_path, 'wb') as f:
+            for chunk in uploaded_file.chunks():
+                f.write(chunk)
+
+    return temp_dir
+
+
+def find_photo_file(photo_name, photos_base_dir):
+    """
+    Find a photo file in the photos directory (recursive search).
+
+    Args:
+        photo_name (str): Name of the photo file
+        photos_base_dir (str): Base directory to search in
+
+    Returns:
+        str or None: Full path to photo file if found, None otherwise
+    """
+    if not photos_base_dir or not os.path.exists(photos_base_dir):
+        return None
+
+    # Remove any path separators from photo_name, we only want the filename
+    photo_filename = os.path.basename(photo_name)
+
+    # Search recursively in the photos directory
+    for root, dirs, files in os.walk(photos_base_dir):
+        if photo_filename in files:
+            return os.path.join(root, photo_filename)
+
+    return None
+
+
+def import_objects_from_csv(file_path, photos_base_dir=None):
     """
     Import Obiekt data and associated photos from a CSV file with comma-separated values.
 
     Args:
         file_path (str): Path to the CSV file
+        photos_base_dir (str): Base directory containing photos (optional)
 
     Returns:
         tuple: (success_count, error_count, error_messages)
@@ -20,9 +79,6 @@ def import_objects_from_csv(file_path):
     success_count = 0
     error_count = 0
     error_messages = []
-
-    # Define the base directory for photos (e.g., MEDIA_ROOT/photos)
-    PHOTO_BASE_DIR = os.path.join(settings.MEDIA_ROOT, 'zdjecia')  # Adjust as needed
 
     try:
         with open(file_path, 'r', encoding='utf-8') as csvfile:
@@ -81,28 +137,44 @@ def import_objects_from_csv(file_path):
                         if key.startswith('zdjecie'):
                             value = row[key]
                             if isinstance(value, str) and value.strip():
-                                # Prepend base directory if path is relative
-                                full_path = value if os.path.isabs(value) else os.path.join(PHOTO_BASE_DIR, value)
-                                photo_list.append(full_path)
-                            elif value:
-                                error_messages.append(f"Invalid photo value in {key} for {obiekt}: {value}")
+                                photo_list.append(value.strip())
 
                     # Limit to 10 photos
                     if len(photo_list) > 10:
                         raise ValidationError(f"Obiekt może mieć maksymalnie 10 zdjęć. Znaleziono {len(photo_list)}.")
 
-                    for path in photo_list:
+                    # Process photos
+                    for photo_name in photo_list:
                         try:
-                            if not os.path.exists(path):
-                                raise FileNotFoundError(f"Photo file not found: {path}")
+                            photo_path = None
 
-                            with open(path, 'rb') as photo_file:
+                            # If photos_base_dir is provided, search for the photo
+                            if photos_base_dir:
+                                photo_path = find_photo_file(photo_name, photos_base_dir)
+
+                            # If not found in uploaded folder, try the old method (absolute/relative path)
+                            if not photo_path:
+                                if os.path.isabs(photo_name):
+                                    photo_path = photo_name
+                                else:
+                                    # Try in default MEDIA_ROOT/zdjecia directory
+                                    default_photo_dir = os.path.join(settings.MEDIA_ROOT, 'zdjecia')
+                                    potential_path = os.path.join(default_photo_dir, photo_name)
+                                    if os.path.exists(potential_path):
+                                        photo_path = potential_path
+
+                            if not photo_path or not os.path.exists(photo_path):
+                                error_messages.append(f"Photo file not found: {photo_name} for object {obiekt}")
+                                continue
+
+                            with open(photo_path, 'rb') as photo_file:
                                 foto = Foto(obiekt=obiekt)
-                                filename = os.path.basename(path)
+                                filename = os.path.basename(photo_path)
                                 foto.plik.save(filename, File(photo_file), save=True)
-                        except (FileNotFoundError, Exception) as e:
+
+                        except Exception as e:
                             error_count += 1
-                            error_messages.append(f"Error adding photo {path} for {obiekt}: {str(e)}")
+                            error_messages.append(f"Error adding photo {photo_name} for {obiekt}: {str(e)}")
                             continue
 
                     success_count += 1

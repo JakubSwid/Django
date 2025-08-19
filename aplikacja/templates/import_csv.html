@@ -14,8 +14,16 @@
     {% endif %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="csv_file" accept=".csv" required>
-        <button type="submit">Importuj</button>
+        <div>
+            <label for="csv_file">Plik CSV:</label>
+            <input type="file" name="csv_file" accept=".csv" required>
+        </div>
+        <div style="margin-top: 10px;">
+            <label for="photos_folder">Folder ze zdjęciami:</label>
+            <input type="file" name="photos_folder" webkitdirectory directory multiple>
+            <small style="display: block; color: #666;">Wybierz folder zawierający zdjęcia do importu</small>
+        </div>
+        <button type="submit" style="margin-top: 10px;">Importuj</button>
     </form>
 </body>
 </html>
