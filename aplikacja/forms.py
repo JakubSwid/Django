@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
 from .models import Obiekt, Foto
 from django.forms import inlineformset_factory
 
@@ -65,3 +67,49 @@ class ObiektFilterForm(forms.Form):
         self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('powiat', flat=True).distinct().order_by('powiat') if v]
         self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('lokalizacja', flat=True).distinct().order_by('lokalizacja') if v]
         self.fields['typ_obiektu'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('typ_obiektu', flat=True).distinct().order_by('typ_obiektu') if v]
+
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Wprowadź adres email'
+    }))
+    
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Wprowadź nazwę użytkownika'
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Wprowadź hasło'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Potwierdź hasło'
+        })
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Nazwa użytkownika lub email'
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Wprowadź hasło'
+        })
