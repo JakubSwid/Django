@@ -97,6 +97,8 @@ def formularz(request):
         obiekt_form = ObiektForm()
         foto_formset = FotoFormSet()
 
+    obiekt_form = ObiektForm(initial={'status': 'roboczy'})
+
     return render(request, 'formularz.html', {
         'obiekt_form': obiekt_form,
         'foto_formset': foto_formset

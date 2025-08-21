@@ -397,6 +397,34 @@
                 </span>
             </div>
             {% endif %}
+
+            {% if obiekt.data_powstania_obiektu %}
+            <div class="pole">
+                <div class="field-label"><i class="fas fa-history"></i>Data powstania obiektu:</div>
+                <div class="field-value mt-2">{{ obiekt.data_powstania_obiektu }}</div>
+            </div>
+            {% endif %}
+
+            {% if obiekt.tom %}
+            <div class="pole">
+                <span class="field-label"><i class="fas fa-bookmark"></i>Tom:</span>
+                <span class="field-value">{{ obiekt.tom }}</span>
+            </div>
+            {% endif %}
+
+            {% if obiekt.strona %}
+            <div class="pole">
+                <span class="field-label"><i class="fas fa-file-alt"></i>Strona:</span>
+                <span class="field-value">{{ obiekt.strona }}</span>
+            </div>
+            {% endif %}
+
+<!--            {% if obiekt.status %}-->
+<!--            <div class="pole">-->
+<!--                <span class="field-label"><i class="fas fa-check-circle"></i>Status:</span>-->
+<!--                <span class="field-value">{{ obiekt.status }}</span>-->
+<!--            </div>-->
+<!--            {% endif %}-->
         </div>
 
         <div class="text-section">
@@ -449,10 +477,10 @@
             </div>
             {% endif %}
 
-            {% if obiekt.odsyłacze_do_zrodla %}
+            {% if obiekt.odsylacze_do_zrodla %}
             <div class="pole">
                 <div class="field-label"><i class="fas fa-link"></i>Odsyłacze do źródła:</div>
-                <div class="field-value mt-2">{{ obiekt.odsyłacze_do_zrodla }}</div>
+                <div class="field-value mt-2">{{ obiekt.odsylacze_do_zrodla }}</div>
             </div>
             {% endif %}
 
@@ -514,17 +542,19 @@
         {% if zdjecia %}
         <div class="photos-section">
             <div class="photos-header">
-
+                <i class="fas fa-camera"></i>
                 <h2>Zdjęcia ({{ zdjecia|length }}/10)</h2>
             </div>
             <div class="zdjecia-container">
                 {% for zdjecie in zdjecia %}
                     <div class="photo-wrapper">
-                        <img src="{{ zdjecie.plik.url }}" 
-                             alt="{{ zdjecie.opis|default:'Zdjęcie' }}" 
-                             class="zdjecie" 
+                        <img src="{{ zdjecie.plik.url }}"
+                             alt="{{ zdjecie.opis|default:'Zdjęcie' }}"
+                             class="zdjecie"
                              onclick="openLightbox('{{ zdjecie.plik.url }}')">
-
+                        <div class="photo-overlay">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
                     </div>
                 {% endfor %}
             </div>

@@ -7,6 +7,7 @@ class ObiektForm(forms.ModelForm):
     class Meta:
         model = Obiekt
         fields = '__all__'
+        exclude = ['status']
         widgets = {
             'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski'}),
@@ -33,6 +34,7 @@ class ObiektForm(forms.ModelForm):
             'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan'}),
+            'status': forms.CharField(widget=forms.HiddenInput(), required=False, initial='roboczy'),
         }
 
 class FotoForm(forms.ModelForm):
