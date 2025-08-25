@@ -94,12 +94,12 @@
             .navbar-brand {
                 font-size: 1.4rem;
             }
-            
+
             .btn-auth {
                 margin: 5px 0;
                 display: inline-block;
             }
-            
+
             .auth-buttons {
                 flex-direction: column;
                 align-items: center;
@@ -117,11 +117,11 @@
                 <i class="fas fa-search"></i>
                 Wyszukiwarka Obiektów
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -143,7 +143,7 @@
                         </a>
                     </li>
                 </ul>
-                
+
                 <div class="d-flex align-items-center auth-buttons">
                     {% if user.is_authenticated %}
                         <span class="username-display">
