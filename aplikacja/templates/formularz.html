@@ -167,6 +167,12 @@
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
         }
 
+        .foto-item.marked-for-deletion {
+            opacity: 0.5;
+            transform: translateX(-10px);
+            border-color: #dc3545;
+        }
+
         .file-input-wrapper {
             position: relative;
             display: flex;
@@ -264,6 +270,12 @@
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
+        .delete-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .delete-btn i {
             margin-right: 5px;
         }
@@ -358,7 +370,7 @@
                     {{ foto_formset.management_form }}
                     <div id="foto-forms">
                         {% for form in foto_formset %}
-                            <div class="foto-item">
+                            <div class="foto-item" data-form-type="existing">
                                 <div class="file-input-wrapper">
                                     <input type="file" name="{{ form.plik.html_name }}" accept="image/*" class="file-input form-control" id="{{ form.plik.id_for_label }}">
                                     {% for hidden in form.hidden_fields %}
@@ -399,6 +411,7 @@
 {% block extra_js %}
     <script>
         let formCount = {{ foto_formset.total_form_count }};
+        let deletedForms = new Set(); // Track deleted forms
 
         function addPhoto() {
             if (formCount >= 10) {
@@ -409,6 +422,7 @@
             const formContainer = document.getElementById('foto-forms');
             const newForm = document.createElement('div');
             newForm.className = 'foto-item';
+            newForm.setAttribute('data-form-type', 'new'); // Mark as new form
 
             // Create proper Django formset structure
             const newFormHtml = `
@@ -441,10 +455,7 @@
 
             // Update form count
             formCount++;
-            const totalFormsInput = document.querySelector('#id_zdjecia-TOTAL_FORMS');
-            if (totalFormsInput) {
-                totalFormsInput.value = formCount;
-            }
+            updateTotalForms();
 
             // Add animation
             newForm.style.opacity = '0';
@@ -458,46 +469,129 @@
 
         function deleteFoto(button) {
             const fotoItem = button.parentElement;
+            const formType = fotoItem.getAttribute('data-form-type');
             const deleteInput = fotoItem.querySelector('input[name$="-DELETE"]');
 
-            if (deleteInput) {
-                // Mark for deletion instead of removing from DOM
-                deleteInput.value = 'on';
-                fotoItem.style.transition = 'all 0.3s ease';
-                fotoItem.style.opacity = '0.5';
-                fotoItem.style.transform = 'translateX(-10px)';
+            if (formType === 'existing' && deleteInput) {
+                // For existing forms from Django formset - mark for deletion
+                if (!deletedForms.has(fotoItem)) {
+                    deleteInput.value = 'on';
+                    deletedForms.add(fotoItem);
 
-                // Add visual indication that it's marked for deletion
-                const label = fotoItem.querySelector('.file-input-label');
-                if (label) {
-                    label.innerHTML = '<i class="fas fa-trash"></i> Zaznaczone do usunięcia';
-                    label.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-                    label.style.color = 'white';
+                    // Add visual indication
+                    fotoItem.classList.add('marked-for-deletion');
+
+                    const label = fotoItem.querySelector('.file-input-label');
+                    if (label) {
+                        label.innerHTML = '<i class="fas fa-trash"></i> Zaznaczone do usunięcia';
+                        label.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                        label.style.color = 'white';
+                    }
+
+                    // Update button to show restore option
+                    button.innerHTML = '<i class="fas fa-undo"></i> Przywróć';
+                    button.onclick = function() { restoreFoto(this); };
                 }
-
-                // Disable the delete button
-                button.disabled = true;
-                button.style.opacity = '0.5';
             } else {
-                // For newly added forms that aren't saved yet, remove from DOM
+                // For newly added forms - remove from DOM
                 fotoItem.style.transition = 'all 0.3s ease';
                 fotoItem.style.opacity = '0';
                 fotoItem.style.transform = 'translateX(-100%)';
+
                 setTimeout(() => {
                     fotoItem.remove();
-                    // Update form count
                     formCount--;
-                    const totalFormsInput = document.querySelector('#id_zdjecia-TOTAL_FORMS');
-                    if (totalFormsInput) {
-                        totalFormsInput.value = formCount;
-                    }
+                    updateTotalForms();
+                    reindexForms();
                 }, 300);
             }
+        }
+
+        function restoreFoto(button) {
+            const fotoItem = button.parentElement;
+            const deleteInput = fotoItem.querySelector('input[name$="-DELETE"]');
+
+            if (deleteInput) {
+                deleteInput.value = '';
+                deletedForms.delete(fotoItem);
+
+                // Remove visual indication
+                fotoItem.classList.remove('marked-for-deletion');
+
+                const label = fotoItem.querySelector('.file-input-label');
+                if (label) {
+                    const fileInput = fotoItem.querySelector('input[type="file"]');
+                    if (fileInput && fileInput.files.length > 0) {
+                        const fileName = fileInput.files[0].name;
+                        const displayName = fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName;
+                        label.innerHTML = `<i class="fas fa-check-circle"></i> ${displayName}`;
+                        label.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        label.style.color = 'white';
+                    } else {
+                        label.innerHTML = '<i class="fas fa-upload"></i> Wybierz zdjęcie';
+                        label.style.background = 'linear-gradient(135deg, var(--beige) 0%, var(--light-brown) 100%)';
+                        label.style.color = 'var(--dark-brown)';
+                    }
+                }
+
+                // Restore delete button
+                button.innerHTML = '<i class="fas fa-trash"></i> Usuń';
+                button.onclick = function() { deleteFoto(this); };
+            }
+        }
+
+        function updateTotalForms() {
+            const totalFormsInput = document.querySelector('#id_zdjecia-TOTAL_FORMS');
+            if (totalFormsInput) {
+                totalFormsInput.value = formCount;
+            }
+        }
+
+        function reindexForms() {
+            const fotoItems = document.querySelectorAll('.foto-item[data-form-type="new"]');
+            let newIndex = {{ foto_formset.total_form_count }};
+
+            fotoItems.forEach((item) => {
+                const inputs = item.querySelectorAll('input');
+                const label = item.querySelector('label');
+
+                inputs.forEach((input) => {
+                    const oldName = input.name;
+                    const oldId = input.id;
+
+                    if (oldName) {
+                        const newName = oldName.replace(/zdjecia-\d+-/, `zdjecia-${newIndex}-`);
+                        input.name = newName;
+                    }
+
+                    if (oldId) {
+                        const newId = oldId.replace(/id_zdjecia-\d+-/, `id_zdjecia-${newIndex}-`);
+                        input.id = newId;
+                    }
+                });
+
+                if (label) {
+                    const oldFor = label.getAttribute('for');
+                    if (oldFor) {
+                        const newFor = oldFor.replace(/id_zdjecia-\d+-/, `id_zdjecia-${newIndex}-`);
+                        label.setAttribute('for', newFor);
+                    }
+                }
+
+                newIndex++;
+            });
         }
 
         // Add file name display functionality
         document.addEventListener('change', function(e) {
             if (e.target.type === 'file') {
+                const fotoItem = e.target.closest('.foto-item');
+
+                // Skip if form is marked for deletion
+                if (fotoItem && fotoItem.classList.contains('marked-for-deletion')) {
+                    return;
+                }
+
                 const label = e.target.nextElementSibling;
                 // Skip hidden inputs
                 let labelElement = label;
