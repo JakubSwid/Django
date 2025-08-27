@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from .models import Obiekt
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet, ObiektFilterForm
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm
 from .utils import import_objects_from_csv, save_uploaded_photos
 from django.core.files.storage import FileSystemStorage
 import os
@@ -153,3 +155,54 @@ def import_csv_view(request):
         return HttpResponseRedirect(request.path)
 
     return render(request, 'import_csv.html')
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('wyszukaj')
+    
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Witaj ponownie, {user.username}!')
+                next_url = request.GET.get('next', 'wyszukaj')
+                return redirect(next_url)
+        else:
+            messages.error(request, 'Nieprawidłowa nazwa użytkownika lub hasło.')
+    else:
+        form = CustomAuthenticationForm()
+    
+    return render(request, 'auth/login.html', {'form': form})
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('wyszukaj')
+    
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Konto dla {username} zostało utworzone pomyślnie!')
+            login(request, user)
+            return redirect('wyszukaj')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{form.fields[field].label}: {error}')
+    else:
+        form = CustomUserCreationForm()
+    
+    return render(request, 'auth/register.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Zostałeś pomyślnie wylogowany.')
+    return redirect('wyszukaj')

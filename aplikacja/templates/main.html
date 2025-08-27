@@ -1,26 +1,9 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wyszukiwarka Obiektów</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-brown: #8B4513;
-            --light-brown: #D2B48C;
-            --beige: #F5F5DC;
-            --cream: #FFF8DC;
-            --dark-brown: #654321;
-        }
+{% extends 'base.html' %}
 
-        body {
-            background: linear-gradient(135deg, var(--cream) 0%, var(--beige) 100%);
-            font-family: 'Georgia', serif;
-            min-height: 100vh;
-        }
+{% block title %}Wyszukiwarka Obiektów{% endblock %}
 
+{% block extra_css %}
+<style>
         .header-section {
             background: linear-gradient(135deg, var(--primary-brown) 0%, var(--dark-brown) 100%);
             color: white;
@@ -376,17 +359,18 @@
                 justify-content: center;
             }
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block content %}
     <div class="header-section">
         <div class="container">
             <div class="header-content">
                 <h1 class="main-title">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-search" style="color: var(--primary-brown)"></i>
                     Wyszukiwarka Obiektów
                 </h1>
-                <a href="{{ 'rekordy' }}" class="header-link">
+                <a href="{% url 'rekordy' %}" class="header-link">
                     <i class="fas fa-list"></i>
                     Wszystkie obiekty
                 </a>
@@ -608,7 +592,9 @@
             </div>
         {% endif %}
     </div>
+{% endblock %}
 
+{% block extra_js %}
     <script>
         function toggleAdvancedFilters() {
             const advancedFilters = document.getElementById('advancedFilters');
@@ -623,6 +609,4 @@
             }
         }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}

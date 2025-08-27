@@ -1,36 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista Obiektów</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-brown: #8B4513;
-            --light-brown: #D2B48C;
-            --beige: #F5F5DC;
-            --cream: #FFF8DC;
-            --dark-brown: #654321;
+{% extends 'base.html' %}
+
+{% block title %}Lista Obiektów - Wyszukiwarka Obiektów{% endblock %}
+
+{% block extra_css %}
+<style>
+        /* Resetowanie paddingu z base.html dla tej strony */
+        .main-content {
+            padding-top: 0 !important;
         }
 
-        body {
-            background: linear-gradient(135deg, var(--cream) 0%, var(--beige) 100%);
-            font-family: 'Georgia', serif;
-            min-height: 100vh;
+        .page-container {
+            display: flex;
         }
 
         .sidebar {
             background: linear-gradient(180deg, #fff 0%, var(--beige) 100%);
             border-right: 3px solid var(--light-brown);
             box-shadow: 2px 0 10px rgba(139, 69, 19, 0.1);
-            min-height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 280px;
-            z-index: 1000;
+            flex-shrink: 0;
             overflow-y: auto;
+            max-height: calc(100vh - 70px);
+            position: sticky;
+            top: 70px;
         }
 
         .sidebar h2 {
@@ -42,9 +34,10 @@
             margin-bottom: 20px;
         }
 
-        .main-content {
-            margin-left: 300px;
+        .content-area {
+            flex: 1;
             padding: 20px;
+            overflow-x: auto;
         }
 
         .page-header {
@@ -189,6 +182,9 @@
             font-weight: bold;
             transition: all 0.3s ease;
             border: 2px solid var(--light-brown);
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
         }
 
         .search-link:hover {
@@ -196,6 +192,7 @@
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+            text-decoration: none;
         }
 
         .no-objects {
@@ -213,142 +210,157 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+            margin-bottom: 20px;
         }
 
+        /* Media queries dla responsywności */
         @media (max-width: 768px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                min-height: auto;
+            .page-container {
+                flex-direction: column;
+                margin-top: 80px;
             }
 
-            .main-content {
-                margin-left: 0;
+            .sidebar {
+                width: 100%;
+                position: relative;
+                top: 0;
+                max-height: none;
+            }
+
+            .content-area {
+                padding: 15px;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
             }
         }
-    </style>
-</head>
-<body>
 
-<div class="sidebar">
-    <div class="p-4">
-        <h2><i class="fas fa-filter"></i> Filtry</h2>
-        <div class="filter-form">
-            <form method="get" id="filter-form">
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary w-100 mb-3">
-                    <i class="fas fa-search"></i> Filtruj
-                </button>
-            </form>
-        </div>
-        <h2><i class="fas fa-search"></i> Wyszukiwarka</h2>
-        <a href="{{ '/' }}" class="search-link w-100 text-center">
-            <i class="fas fa-home"></i> Wyszukiwarka
-        </a>
-    </div>
-</div>
 
-<div class="main-content">
-    <div class="page-header text-center">
-        <div class="container">
-            <h1><i class="fas fa-monument"></i> Lista Obiektów</h1>
-            <p class="lead mb-0">Przeglądaj kolekcję historycznych obiektów i pomników</p>
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="sidebar">
+        <div class="p-4">
+            <h2><i class="fas fa-filter"></i> Filtry</h2>
+            <div class="filter-form">
+                <form method="get" id="filter-form">
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-search"></i> Filtruj
+                    </button>
+                </form>
+            </div>
+            <h2><i class="fas fa-search"></i> Wyszukiwarka</h2>
+            <a href="{{ '/' }}" class="search-link">
+                <i class="fas fa-home"></i> Wyszukiwarka
+            </a>
         </div>
     </div>
 
-    {% if obiekty %}
-        <div class="row g-4">
-            {% for obiekt in obiekty %}
-                <div class="col-lg-6 col-xl-4">
-                    <div class="obiekt-card card h-100">
-                        <div class="card-header">
-                            <h2>
-                                <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
-                                    {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}
-                                </a>
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <div class="info-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span class="info-label">Położenie:</span>
-                                <span class="info-value">{{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</span>
-                            </div>
+    <div class="content-area">
+        <div class="page-header text-center">
+            <div class="container">
+                <h1><i class="fas fa-monument"></i> Lista Obiektów</h1>
+                <p class="lead mb-0">Przeglądaj kolekcję historycznych obiektów i pomników</p>
+            </div>
+        </div>
 
-                            <div class="info-item">
-                                <i class="fas fa-map"></i>
-                                <span class="info-label">Powiat:</span>
-                                <span class="info-value">{{ obiekt.powiat }}</span>
+        {% if obiekty %}
+            <div class="row g-4">
+                {% for obiekt in obiekty %}
+                    <div class="col-lg-6 col-xl-4">
+                        <div class="obiekt-card card h-100">
+                            <div class="card-header">
+                                <h2>
+                                    <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
+                                        {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}
+                                    </a>
+                                </h2>
                             </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-flag"></i>
-                                <span class="info-label">Województwo:</span>
-                                <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-location-dot"></i>
-                                <span class="info-label">Lokalizacja:</span>
-                                <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-cube"></i>
-                                <span class="info-label">Materiał:</span>
-                                <span class="info-value">{{ obiekt.material|default:"Brak" }}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-ruler-combined"></i>
-                                <span class="info-label">Wymiary:</span>
-                                <span class="info-value">{{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</span>
-                            </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-align-left"></i>
-                                <span class="info-label">Opis:</span>
-                                <span class="info-value">{{ obiekt.opis|truncatewords:20|default:"Brak" }}</span>
-                            </div>
-
-                            <div class="info-item">
-                                <i class="fas fa-calendar"></i>
-                                <span class="info-label">Data wpisu:</span>
-                                <span class="info-value">{{ obiekt.data_wpisu }}</span>
-                            </div>
-
-                            <div class="photos-header">
-                                <i class="fas fa-images"></i>
-                                Zdjęcia ({{ obiekt.zdjecia.count }}/10)
-                            </div>
-
-                            {% if obiekt.zdjecia.all %}
-                                <div class="zdjecia-container">
-                                    <div class="d-flex flex-wrap gap-2">
-                                        {% for zdjecie in obiekt.zdjecia.all %}
-                                            <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie">
-                                        {% endfor %}
-                                    </div>
+                            <div class="card-body">
+                                <div class="info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span class="info-label">Położenie:</span>
+                                    <span class="info-value">{{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</span>
                                 </div>
-                            {% else %}
-                                <p class="text-muted mb-0">
-                                    <i class="fas fa-exclamation-circle"></i> Brak zdjęć
-                                </p>
-                            {% endif %}
+
+                                <div class="info-item">
+                                    <i class="fas fa-map"></i>
+                                    <span class="info-label">Powiat:</span>
+                                    <span class="info-value">{{ obiekt.powiat }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-flag"></i>
+                                    <span class="info-label">Województwo:</span>
+                                    <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-location-dot"></i>
+                                    <span class="info-label">Lokalizacja:</span>
+                                    <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-cube"></i>
+                                    <span class="info-label">Materiał:</span>
+                                    <span class="info-value">{{ obiekt.material|default:"Brak" }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-ruler-combined"></i>
+                                    <span class="info-label">Wymiary:</span>
+                                    <span class="info-value">{{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-align-left"></i>
+                                    <span class="info-label">Opis:</span>
+                                    <span class="info-value">{{ obiekt.opis|truncatewords:20|default:"Brak" }}</span>
+                                </div>
+
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span class="info-label">Data wpisu:</span>
+                                    <span class="info-value">{{ obiekt.data_wpisu }}</span>
+                                </div>
+
+                                <div class="photos-header">
+                                    <i class="fas fa-images"></i>
+                                    Zdjęcia ({{ obiekt.zdjecia.count }}/10)
+                                </div>
+
+                                {% if obiekt.zdjecia.all %}
+                                    <div class="zdjecia-container">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for zdjecie in obiekt.zdjecia.all %}
+                                                <img src="{{ zdjecie.plik.url }}" alt="{{ zdjecie.opis|default:'Zdjęcie' }}" class="zdjecie">
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-exclamation-circle"></i> Brak zdjęć
+                                    </p>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="no-objects">
-            <i class="fas fa-search fa-3x mb-3"></i>
-            <h3>Brak obiektów w bazie danych</h3>
-            <p>Spróbuj zmienić kryteria wyszukiwania lub dodaj nowe obiekty.</p>
-        </div>
-    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-objects">
+                <i class="fas fa-search fa-3x mb-3"></i>
+                <h3>Brak obiektów w bazie danych</h3>
+                <p>Spróbuj zmienić kryteria wyszukiwania lub dodaj nowe obiekty.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endblock %}
