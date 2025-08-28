@@ -13,4 +13,5 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     path('moje-zgloszenia/', views.moje_zgloszenia, name='moje_zgloszenia'),
+    path('edytuj-roboczy/<int:obiekt_id>/', views.edytuj_roboczy, name='edytuj_roboczy'),
 ]

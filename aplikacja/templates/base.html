@@ -1,3 +1,4 @@
+{% load permission_tags %}
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -149,6 +150,14 @@
                                 Moje zgłoszenia
                             </a>
                         </li>
+                        {% if user|is_redaktor %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'import_csv' %}">
+                                    <i class="fas fa-file-csv"></i>
+                                    Import CSV
+                                </a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
 
@@ -156,7 +165,7 @@
                     {% if user.is_authenticated %}
                         <span class="username-display">
                             <i class="fas fa-user"></i>
-                            Witaj, {{ user.username }}!
+                            Witaj, {{ user.username }}! ({% user_role_display user %})
                         </span>
                         <a href="{% url 'logout' %}" class="btn-auth btn-logout">
                             <i class="fas fa-sign-out-alt"></i>
