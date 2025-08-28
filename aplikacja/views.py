@@ -76,13 +76,16 @@ def wyszukaj(request):
     }
     return render(request, 'main.html', context)
 
+@login_required
 def formularz(request):
     if request.method == 'POST':
         obiekt_form = ObiektForm(request.POST)
         foto_formset = FotoFormSet(request.POST, request.FILES)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
-            obiekt = obiekt_form.save()
+            obiekt = obiekt_form.save(commit=False)
+            obiekt.user = request.user  # Set the current user
+            obiekt.save()
 
             # Ustawiamy obiekt dla zdjęć i zapisujemy
             fotos = foto_formset.save(commit=False)
@@ -96,10 +99,8 @@ def formularz(request):
             if not foto_formset.is_valid():
                 messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
-        obiekt_form = ObiektForm()
+        obiekt_form = ObiektForm(initial={'status': 'roboczy'})
         foto_formset = FotoFormSet()
-
-    obiekt_form = ObiektForm(initial={'status': 'roboczy'})
 
     return render(request, 'formularz.html', {
         'obiekt_form': obiekt_form,
@@ -206,3 +207,15 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Zostałeś pomyślnie wylogowany.')
     return redirect('wyszukaj')
+
+
+@login_required
+def moje_zgloszenia(request):
+    """View to display user's own objects"""
+    user_obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia').order_by('-id')
+    
+    context = {
+        'obiekty': user_obiekty,
+        'user': request.user
+    }
+    return render(request, 'moje_zgloszenia.html', context)

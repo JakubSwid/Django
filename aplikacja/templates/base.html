@@ -136,12 +136,20 @@
                             Lista obiektów
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'formularz' %}">
-                            <i class="fas fa-plus"></i>
-                            Dodaj obiekt
-                        </a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'formularz' %}">
+                                <i class="fas fa-plus"></i>
+                                Dodaj obiekt
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'moje_zgloszenia' %}">
+                                <i class="fas fa-user-edit"></i>
+                                Moje zgłoszenia
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
 
                 <div class="d-flex align-items-center auth-buttons">
