@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Formularz - Dodaj Nowy Obiekt{% endblock %}
+{% block title %}Edytuj Obiekt - {{ obiekt.nazwa_geograficzna_polska }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -328,6 +328,18 @@
             border-color: var(--primary-brown);
         }
 
+        .cancel-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            text-decoration: none;
+        }
+
+        .cancel-btn:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #545b62 100%);
+            color: white;
+            text-decoration: none;
+        }
+
         @media (max-width: 768px) {
             .form-container {
                 padding: 25px;
@@ -350,8 +362,8 @@
 {% block content %}
     <div class="container">
         <div class="main-header text-center">
-            <h1><i class="fas fa-plus-circle"></i> Dodaj Nowy Obiekt</h1>
-            <p class="lead mb-0">Wypełnij formularz aby dodać nowy obiekt do bazy danych</p>
+            <h1><i class="fas fa-edit"></i> Edytuj Obiekt</h1>
+            <p class="lead mb-0">{{ obiekt.nazwa_geograficzna_polska }} - Status: {{ obiekt.get_status_display }}</p>
         </div>
 
         {% if messages %}
@@ -385,13 +397,16 @@
                         {% for form in foto_formset %}
                             <div class="foto-item" data-form-type="existing">
                                 <div class="file-input-wrapper">
+                                    {% if form.instance.plik %}
+                                        <p>Aktualne zdjęcie: {{ form.instance.plik.name }}</p>
+                                    {% endif %}
                                     <input type="file" name="{{ form.plik.html_name }}" accept="image/*" class="file-input form-control" id="{{ form.plik.id_for_label }}">
                                     {% for hidden in form.hidden_fields %}
                                         {{ hidden }}
                                     {% endfor %}
                                     <label for="{{ form.plik.id_for_label }}" class="file-input-label">
                                         <i class="fas fa-upload"></i>
-                                        Wybierz zdjęcie
+                                        {% if form.instance.plik %}Zmień zdjęcie{% else %}Wybierz zdjęcie{% endif %}
                                     </label>
                                 </div>
                                 <button type="button" class="delete-btn" onclick="deleteFoto(this)">
@@ -409,9 +424,9 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="button" class="btn add-photo-btn" onclick="addPhoto()">
-                        <i class="fas fa-plus"></i> Dodaj Zdjęcie
-                    </button>
+                    <a href="{% url 'moje_zgloszenia' %}" class="btn cancel-btn">
+                        <i class="fas fa-times"></i> Anuluj
+                    </a>
                     <button type="submit" name="zapisz_roboczy" class="btn btn-secondary btn-lg">
                         <i class="fas fa-save"></i> Zapisz jako Roboczy
                     </button>
@@ -427,7 +442,7 @@
 {% block extra_js %}
     <script>
         let formCount = {{ foto_formset.total_form_count }};
-        let deletedForms = new Set(); // Track deleted forms
+        let deletedForms = new Set();
 
         function addPhoto() {
             if (formCount >= 10) {
@@ -438,9 +453,8 @@
             const formContainer = document.getElementById('foto-forms');
             const newForm = document.createElement('div');
             newForm.className = 'foto-item';
-            newForm.setAttribute('data-form-type', 'new'); // Mark as new form
+            newForm.setAttribute('data-form-type', 'new');
 
-            // Create proper Django formset structure
             const newFormHtml = `
                 <div class="file-input-wrapper">
                     <input type="file"
@@ -469,11 +483,9 @@
             newForm.innerHTML = newFormHtml;
             formContainer.appendChild(newForm);
 
-            // Update form count
             formCount++;
             updateTotalForms();
 
-            // Add animation
             newForm.style.opacity = '0';
             newForm.style.transform = 'translateY(-20px)';
             setTimeout(() => {
@@ -489,12 +501,10 @@
             const deleteInput = fotoItem.querySelector('input[name$="-DELETE"]');
 
             if (formType === 'existing' && deleteInput) {
-                // For existing forms from Django formset - mark for deletion
                 if (!deletedForms.has(fotoItem)) {
                     deleteInput.value = 'on';
                     deletedForms.add(fotoItem);
 
-                    // Add visual indication
                     fotoItem.classList.add('marked-for-deletion');
 
                     const label = fotoItem.querySelector('.file-input-label');
@@ -504,12 +514,10 @@
                         label.style.color = 'white';
                     }
 
-                    // Update button to show restore option
                     button.innerHTML = '<i class="fas fa-undo"></i> Przywróć';
                     button.onclick = function() { restoreFoto(this); };
                 }
             } else {
-                // For newly added forms - remove from DOM
                 fotoItem.style.transition = 'all 0.3s ease';
                 fotoItem.style.opacity = '0';
                 fotoItem.style.transform = 'translateX(-100%)';
@@ -531,7 +539,6 @@
                 deleteInput.value = '';
                 deletedForms.delete(fotoItem);
 
-                // Remove visual indication
                 fotoItem.classList.remove('marked-for-deletion');
 
                 const label = fotoItem.querySelector('.file-input-label');
@@ -544,13 +551,12 @@
                         label.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
                         label.style.color = 'white';
                     } else {
-                        label.innerHTML = '<i class="fas fa-upload"></i> Wybierz zdjęcie';
+                        label.innerHTML = '<i class="fas fa-upload"></i> Zmień zdjęcie';
                         label.style.background = 'linear-gradient(135deg, var(--beige) 0%, var(--light-brown) 100%)';
                         label.style.color = 'var(--dark-brown)';
                     }
                 }
 
-                // Restore delete button
                 button.innerHTML = '<i class="fas fa-trash"></i> Usuń';
                 button.onclick = function() { deleteFoto(this); };
             }
@@ -598,18 +604,15 @@
             });
         }
 
-        // Add file name display functionality
         document.addEventListener('change', function(e) {
             if (e.target.type === 'file') {
                 const fotoItem = e.target.closest('.foto-item');
 
-                // Skip if form is marked for deletion
                 if (fotoItem && fotoItem.classList.contains('marked-for-deletion')) {
                     return;
                 }
 
                 const label = e.target.nextElementSibling;
-                // Skip hidden inputs
                 let labelElement = label;
                 while (labelElement && !labelElement.classList.contains('file-input-label')) {
                     labelElement = labelElement.nextElementSibling;
@@ -617,7 +620,6 @@
 
                 if (labelElement && e.target.files.length > 0) {
                     const fileName = e.target.files[0].name;
-                    // Truncate long filenames
                     const displayName = fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName;
                     labelElement.innerHTML = `<i class="fas fa-check-circle"></i> ${displayName}`;
                     labelElement.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
@@ -630,7 +632,6 @@
             }
         });
 
-        // Initialize existing file inputs on page load
         document.addEventListener('DOMContentLoaded', function() {
             const fileInputs = document.querySelectorAll('input[type="file"]');
             fileInputs.forEach(function(input) {

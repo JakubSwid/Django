@@ -3,10 +3,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from .models import Obiekt
+from .models import Obiekt, Foto
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm
+from django.forms import inlineformset_factory
 from .utils import import_objects_from_csv, save_uploaded_photos
+from .decorators import redaktor_required, own_draft_object_required
 from django.core.files.storage import FileSystemStorage
 import os
 import tempfile
@@ -84,22 +86,34 @@ def formularz(request):
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
             obiekt = obiekt_form.save(commit=False)
-            obiekt.user = request.user  # Set the current user
+            obiekt.user = request.user
+            
+            # Determine action based on button clicked
+            if 'zapisz_roboczy' in request.POST:
+                obiekt.status = 'roboczy'
+                success_message = 'Obiekt został zapisany jako roboczy!'
+            elif 'wyslij_weryfikacja' in request.POST:
+                obiekt.status = 'weryfikacja'
+                success_message = 'Obiekt został wysłany do weryfikacji!'
+            else:
+                obiekt.status = 'roboczy'  # Default
+                success_message = 'Obiekt został pomyślnie dodany!'
+            
             obiekt.save()
 
-            # Ustawiamy obiekt dla zdjęć i zapisujemy
+            # Save photos
             fotos = foto_formset.save(commit=False)
             for foto in fotos:
                 foto.obiekt = obiekt
                 foto.save()
 
-            messages.success(request, 'Obiekt został pomyślnie dodany!')
-            return redirect('rekordy')
+            messages.success(request, success_message)
+            return redirect('moje_zgloszenia')
         else:
             if not foto_formset.is_valid():
                 messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
-        obiekt_form = ObiektForm(initial={'status': 'roboczy'})
+        obiekt_form = ObiektForm()
         foto_formset = FotoFormSet()
 
     return render(request, 'formularz.html', {
@@ -108,6 +122,7 @@ def formularz(request):
     })
 
 
+@redaktor_required
 def import_csv_view(request):
     if request.method == 'POST':
         csv_file = request.FILES.get('csv_file')
@@ -219,3 +234,59 @@ def moje_zgloszenia(request):
         'user': request.user
     }
     return render(request, 'moje_zgloszenia.html', context)
+
+
+@own_draft_object_required
+def edytuj_roboczy(request, obiekt_id):
+    """View to edit draft objects"""
+    obiekt = get_object_or_404(Obiekt, id=obiekt_id)
+    
+    # Create formset for existing photos
+    FotoEditFormSet = inlineformset_factory(
+        Obiekt, 
+        Foto,
+        form=FotoForm,
+        extra=0,
+        can_delete=True,
+        min_num=1,
+        validate_min=True,
+        max_num=10,
+    )
+    
+    if request.method == 'POST':
+        obiekt_form = ObiektForm(request.POST, instance=obiekt)
+        foto_formset = FotoEditFormSet(request.POST, request.FILES, instance=obiekt)
+
+        if obiekt_form.is_valid() and foto_formset.is_valid():
+            obiekt = obiekt_form.save(commit=False)
+            
+            # Determine action based on button clicked
+            if 'zapisz_roboczy' in request.POST:
+                obiekt.status = 'roboczy'
+                success_message = 'Obiekt został zaktualizowany jako roboczy!'
+            elif 'wyslij_weryfikacja' in request.POST:
+                obiekt.status = 'weryfikacja'
+                success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
+            else:
+                obiekt.status = 'roboczy'  # Default
+                success_message = 'Obiekt został pomyślnie zaktualizowany!'
+            
+            obiekt.save()
+
+            # Save photos
+            foto_formset.save()
+
+            messages.success(request, success_message)
+            return redirect('moje_zgloszenia')
+        else:
+            if not foto_formset.is_valid():
+                messages.error(request, 'Wystąpił błąd podczas zapisywania zdjęć!')
+    else:
+        obiekt_form = ObiektForm(instance=obiekt)
+        foto_formset = FotoEditFormSet(instance=obiekt)
+
+    return render(request, 'edytuj_roboczy.html', {
+        'obiekt_form': obiekt_form,
+        'foto_formset': foto_formset,
+        'obiekt': obiekt
+    })
