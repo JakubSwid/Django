@@ -5,10 +5,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from .models import Obiekt, Foto
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm
 from django.forms import inlineformset_factory
 from .utils import import_objects_from_csv, save_uploaded_photos
-from .decorators import redaktor_required, own_draft_object_required
+from .decorators import redaktor_required, redaktor_or_own_draft_required
 from django.core.files.storage import FileSystemStorage
 import os
 import tempfile
@@ -226,19 +226,48 @@ def logout_view(request):
 
 @login_required
 def moje_zgloszenia(request):
-    """View to display user's own objects"""
-    user_obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia').order_by('-id')
+    """View to display user's own objects or all objects for editors"""
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
+    
+    # Initialize filter form
+    filter_form = StatusFilterForm(request.GET or None)
+    
+    if is_editor:
+        # For editors, show all objects
+        obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
+        
+        # Apply status filter with default to 'weryfikacja' for editors
+        status_filter = request.GET.get('status', 'weryfikacja' if not request.GET else '')
+        if status_filter:
+            obiekty = obiekty.filter(status=status_filter)
+        elif not request.GET:  # Default filter only on initial page load
+            obiekty = obiekty.filter(status='weryfikacja')
+    else:
+        # For regular users, show only their own objects
+        obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia')
+        
+        # Apply status filter if provided
+        if filter_form.is_valid():
+            status = filter_form.cleaned_data.get('status')
+            if status:
+                obiekty = obiekty.filter(status=status)
+    
+    obiekty = obiekty.order_by('-id')
     
     context = {
-        'obiekty': user_obiekty,
-        'user': request.user
+        'obiekty': obiekty,
+        'user': request.user,
+        'is_editor': is_editor,
+        'filter_form': filter_form,
+        'current_status': request.GET.get('status', 'weryfikacja' if is_editor and not request.GET else ''),
     }
     return render(request, 'moje_zgloszenia.html', context)
 
 
-@own_draft_object_required
+@redaktor_or_own_draft_required
 def edytuj_roboczy(request, obiekt_id):
-    """View to edit draft objects"""
+    """View to edit draft objects (or any objects for editors)"""
     obiekt = get_object_or_404(Obiekt, id=obiekt_id)
     
     # Create formset for existing photos

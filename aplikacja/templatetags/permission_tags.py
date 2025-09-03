@@ -17,7 +17,11 @@ def can_edit_obiekt(user, obiekt):
     if not user.is_authenticated:
         return False
     
-    # User can edit only their own draft objects
+    # Editors can edit any object
+    if user.groups.filter(name='Redaktor').exists():
+        return True
+    
+    # Regular users can edit only their own draft objects
     return obiekt.user == user and obiekt.status == 'roboczy'
 
 

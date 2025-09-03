@@ -147,7 +147,7 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'moje_zgloszenia' %}">
                                 <i class="fas fa-user-edit"></i>
-                                Moje zgłoszenia
+                                {% if user|is_redaktor %}Zgłoszenia{% else %}Moje zgłoszenia{% endif %}
                             </a>
                         </li>
                         {% if user|is_redaktor %}

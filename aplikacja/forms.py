@@ -101,6 +101,16 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 
+class StatusFilterForm(forms.Form):
+    """Form for filtering objects by status"""
+    status = forms.ChoiceField(
+        choices=[('', 'Wszystkie')] + Obiekt.STATUSY,
+        required=False,
+        label='Status',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+
 class CustomAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

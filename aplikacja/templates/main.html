@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load permission_tags %}
 
 {% block title %}Wyszukiwarka Obiektów{% endblock %}
 
@@ -359,6 +360,27 @@
                 justify-content: center;
             }
         }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit:hover {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            color: white;
+            text-decoration: none;
+        }
 </style>
 {% endblock %}
 
@@ -580,6 +602,15 @@
                             <p class="text-muted">
                                 <i class="fas fa-exclamation-circle"></i> Brak zdjęć
                             </p>
+                        {% endif %}
+                        
+                        <!-- Edit button for editors -->
+                        {% if user|can_edit_obiekt:obiekt %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'edytuj_roboczy' obiekt.id %}" class="btn-edit">
+                                    <i class="fas fa-edit"></i> Edytuj
+                                </a>
+                            </div>
                         {% endif %}
                     </div>
                 {% endfor %}

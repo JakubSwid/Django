@@ -16,20 +16,26 @@ def redaktor_required(view_func):
     return wrapper
 
 
-def own_draft_object_required(view_func):
-    """Decorator to require user to own the draft object"""
+def redaktor_or_own_draft_required(view_func):
+    """Decorator to allow editors to edit any object or users to edit their own draft objects"""
     @wraps(view_func)
     @login_required
     def wrapper(request, obiekt_id, *args, **kwargs):
         obiekt = get_object_or_404(Obiekt, id=obiekt_id)
         
-        # Check if user owns the object
-        if obiekt.user != request.user:
-            raise PermissionDenied("Możesz edytować tylko swoje zgłoszenia.")
+        # Check if user is editor
+        is_editor = request.user.groups.filter(name='Redaktor').exists()
         
-        # Check if object is in draft status
-        if obiekt.status != 'roboczy':
-            raise PermissionDenied("Możesz edytować tylko zgłoszenia ze statusem 'roboczy'.")
+        if is_editor:
+            # Editors can edit any object
+            return view_func(request, obiekt_id, *args, **kwargs)
+        else:
+            # Regular users can only edit their own draft objects
+            if obiekt.user != request.user:
+                raise PermissionDenied("Możesz edytować tylko swoje zgłoszenia.")
             
+            if obiekt.status != 'roboczy':
+                raise PermissionDenied("Możesz edytować tylko zgłoszenia ze statusem 'roboczy'.")
+                
         return view_func(request, obiekt_id, *args, **kwargs)
     return wrapper
