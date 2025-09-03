@@ -9,9 +9,9 @@ class FotoInline(admin.TabularInline):
 
 @admin.register(Obiekt)
 class ObiektAdmin(admin.ModelAdmin):
-    list_display = ['nazwa_geograficzna_polska', 'typ_obiektu', 'powiat', 'data_wpisu']
-    search_fields = ['nazwa_geograficzna_polska', 'typ_obiektu']
-    list_filter = ['wojewodztwo', 'powiat']
+    list_display = ['nazwa_geograficzna_polska', 'typ_obiektu', 'powiat', 'status', 'user', 'data_wpisu']
+    search_fields = ['nazwa_geograficzna_polska', 'typ_obiektu', 'user__username']
+    list_filter = ['wojewodztwo', 'powiat', 'status', 'user']
     inlines = [FotoInline]
 
 
