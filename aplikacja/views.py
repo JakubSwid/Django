@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from .models import Obiekt, Foto
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm, RedaktorObiektForm
 from django.forms import inlineformset_factory
 from .utils import import_objects_from_csv, save_uploaded_photos
 from .decorators import redaktor_required, redaktor_or_own_draft_required
@@ -80,24 +80,35 @@ def wyszukaj(request):
 
 @login_required
 def formularz(request):
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
+    
     if request.method == 'POST':
-        obiekt_form = ObiektForm(request.POST)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(request.POST)
+        else:
+            obiekt_form = ObiektForm(request.POST)
         foto_formset = FotoFormSet(request.POST, request.FILES)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
             obiekt = obiekt_form.save(commit=False)
             obiekt.user = request.user
             
-            # Determine action based on button clicked
-            if 'zapisz_roboczy' in request.POST:
-                obiekt.status = 'roboczy'
-                success_message = 'Obiekt został zapisany jako roboczy!'
-            elif 'wyslij_weryfikacja' in request.POST:
-                obiekt.status = 'weryfikacja'
-                success_message = 'Obiekt został wysłany do weryfikacji!'
+            if is_editor:
+                # For editors, use status from form
+                success_message = 'Obiekt został pomyślnie zapisany!'
             else:
-                obiekt.status = 'roboczy'  # Default
-                success_message = 'Obiekt został pomyślnie dodany!'
+                # For regular users, determine action based on button clicked
+                if 'zapisz_roboczy' in request.POST:
+                    obiekt.status = 'roboczy'
+                    success_message = 'Obiekt został zapisany jako roboczy!'
+                elif 'wyslij_weryfikacja' in request.POST:
+                    obiekt.status = 'weryfikacja'
+                    success_message = 'Obiekt został wysłany do weryfikacji!'
+                else:
+                    obiekt.status = 'roboczy'  # Default
+                    success_message = 'Obiekt został pomyślnie dodany!'
             
             obiekt.save()
 
@@ -113,12 +124,17 @@ def formularz(request):
             if not foto_formset.is_valid():
                 messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
-        obiekt_form = ObiektForm()
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm()
+        else:
+            obiekt_form = ObiektForm()
         foto_formset = FotoFormSet()
 
     return render(request, 'formularz.html', {
         'obiekt_form': obiekt_form,
-        'foto_formset': foto_formset
+        'foto_formset': foto_formset,
+        'is_editor': is_editor
     })
 
 
@@ -270,6 +286,9 @@ def edytuj_roboczy(request, obiekt_id):
     """View to edit draft objects (or any objects for editors)"""
     obiekt = get_object_or_404(Obiekt, id=obiekt_id)
     
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
+    
     # Create formset for existing photos
     FotoEditFormSet = inlineformset_factory(
         Obiekt, 
@@ -283,22 +302,30 @@ def edytuj_roboczy(request, obiekt_id):
     )
     
     if request.method == 'POST':
-        obiekt_form = ObiektForm(request.POST, instance=obiekt)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(request.POST, instance=obiekt)
+        else:
+            obiekt_form = ObiektForm(request.POST, instance=obiekt)
         foto_formset = FotoEditFormSet(request.POST, request.FILES, instance=obiekt)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
             obiekt = obiekt_form.save(commit=False)
             
-            # Determine action based on button clicked
-            if 'zapisz_roboczy' in request.POST:
-                obiekt.status = 'roboczy'
-                success_message = 'Obiekt został zaktualizowany jako roboczy!'
-            elif 'wyslij_weryfikacja' in request.POST:
-                obiekt.status = 'weryfikacja'
-                success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
-            else:
-                obiekt.status = 'roboczy'  # Default
+            if is_editor:
+                # For editors, use status from form
                 success_message = 'Obiekt został pomyślnie zaktualizowany!'
+            else:
+                # For regular users, determine action based on button clicked
+                if 'zapisz_roboczy' in request.POST:
+                    obiekt.status = 'roboczy'
+                    success_message = 'Obiekt został zaktualizowany jako roboczy!'
+                elif 'wyslij_weryfikacja' in request.POST:
+                    obiekt.status = 'weryfikacja'
+                    success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
+                else:
+                    obiekt.status = 'roboczy'  # Default
+                    success_message = 'Obiekt został pomyślnie zaktualizowany!'
             
             obiekt.save()
 
@@ -311,11 +338,16 @@ def edytuj_roboczy(request, obiekt_id):
             if not foto_formset.is_valid():
                 messages.error(request, 'Wystąpił błąd podczas zapisywania zdjęć!')
     else:
-        obiekt_form = ObiektForm(instance=obiekt)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(instance=obiekt)
+        else:
+            obiekt_form = ObiektForm(instance=obiekt)
         foto_formset = FotoEditFormSet(instance=obiekt)
 
     return render(request, 'edytuj_roboczy.html', {
         'obiekt_form': obiekt_form,
         'foto_formset': foto_formset,
-        'obiekt': obiekt
+        'obiekt': obiekt,
+        'is_editor': is_editor
     })

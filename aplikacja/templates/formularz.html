@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load permission_tags %}
 
 {% block title %}Formularz - Dodaj Nowy Obiekt{% endblock %}
 
@@ -371,7 +372,43 @@
                     <div class="section-header">
                         <h3><i class="fas fa-info-circle"></i> Informacje Podstawowe</h3>
                     </div>
-                    {{ obiekt_form }}
+                    {% if is_editor %}
+                        <!-- For editors, display form fields individually to handle status separately -->
+                        {% for field in obiekt_form %}
+                            {% if field.name != 'status' %}
+                                <div class="mb-3">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Status field for editors -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-flag"></i> Status Obiektu</h3>
+                            </div>
+                            <div class="mb-3">
+                                {{ obiekt_form.status.label_tag }}
+                                {{ obiekt_form.status }}
+                                {% if obiekt_form.status.help_text %}
+                                    <div class="form-text">{{ obiekt_form.status.help_text }}</div>
+                                {% endif %}
+                                {% if obiekt_form.status.errors %}
+                                    <div class="text-danger">{{ obiekt_form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- For regular users, display form normally (status is excluded) -->
+                        {{ obiekt_form }}
+                    {% endif %}
                 </div>
 
                 <div class="photo-section">
@@ -412,12 +449,20 @@
                     <button type="button" class="btn add-photo-btn" onclick="addPhoto()">
                         <i class="fas fa-plus"></i> Dodaj Zdjęcie
                     </button>
-                    <button type="submit" name="zapisz_roboczy" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-save"></i> Zapisz jako Roboczy
-                    </button>
-                    <button type="submit" name="wyslij_weryfikacja" class="btn btn-success btn-lg">
-                        <i class="fas fa-paper-plane"></i> Wyślij do Weryfikacji
-                    </button>
+                    {% if is_editor %}
+                        <!-- For editors, show only save button -->
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Zapisz
+                        </button>
+                    {% else %}
+                        <!-- For regular users, show both buttons -->
+                        <button type="submit" name="zapisz_roboczy" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-save"></i> Zapisz jako Roboczy
+                        </button>
+                        <button type="submit" name="wyslij_weryfikacja" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> Wyślij do Weryfikacji
+                        </button>
+                    {% endif %}
                 </div>
             </form>
         </div>
