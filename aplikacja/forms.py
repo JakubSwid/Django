@@ -29,14 +29,33 @@ class ObiektForm(forms.ModelForm):
             'tlumaczenie': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Tu spoczywa Jan III Sobieski'}),
             'herby': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Herb Sobieskich – Janina'}),
             'genealogia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Syn Jakuba Sobieskiego'}),
+            'data_powstania_obiektu': forms.TextInput(attrs={'placeholder': 'Np. XV wiek lub 1456-1460'}),
+            'tom': forms.TextInput(attrs={'placeholder': 'Np. Tom I lub Tom II'}),
+            'strona': forms.NumberInput(attrs={'placeholder': 'Np. 125'}),
             'bibliografia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. K. Kowalski, "Historia Wawelu"'}),
             'odsyłacze_do_zrodla': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. https://wawel.pl/historia'}),
+            'autorzy_wpisu': forms.TextInput(attrs={'placeholder': 'Np. Jan Kowalski, Anna Nowak'}),
             'data_wpisu': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'korekta_nr_1_autor': forms.TextInput(attrs={'placeholder': 'Np. Piotr Wiśniewski'}),
             'data_korekty_1': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'korekta_nr_2_autor': forms.TextInput(attrs={'placeholder': 'Np. Maria Kowalczyk'}),
             'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Auto-populate autorzy_wpisu with user's full name if creating new object
+        if user and not self.instance.pk:
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            if full_name and full_name != " ":
+                self.initial['autorzy_wpisu'] = full_name
+            else:
+                # Fallback to username if no first/last name set
+                self.initial['autorzy_wpisu'] = user.username
 
 
 class RedaktorObiektForm(forms.ModelForm):
@@ -64,15 +83,34 @@ class RedaktorObiektForm(forms.ModelForm):
             'tlumaczenie': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Tu spoczywa Jan III Sobieski'}),
             'herby': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Herb Sobieskich – Janina'}),
             'genealogia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. Syn Jakuba Sobieskiego'}),
+            'data_powstania_obiektu': forms.TextInput(attrs={'placeholder': 'Np. XV wiek lub 1456-1460'}),
+            'tom': forms.TextInput(attrs={'placeholder': 'Np. Tom I lub Tom II'}),
+            'strona': forms.NumberInput(attrs={'placeholder': 'Np. 125'}),
             'bibliografia': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. K. Kowalski, "Historia Wawelu"'}),
             'odsyłacze_do_zrodla': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Np. https://wawel.pl/historia'}),
+            'autorzy_wpisu': forms.TextInput(attrs={'placeholder': 'Np. Jan Kowalski, Anna Nowak'}),
             'data_wpisu': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'korekta_nr_1_autor': forms.TextInput(attrs={'placeholder': 'Np. Piotr Wiśniewski'}),
             'data_korekty_1': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
+            'korekta_nr_2_autor': forms.TextInput(attrs={'placeholder': 'Np. Maria Kowalczyk'}),
             'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Auto-populate autorzy_wpisu with user's full name if creating new object
+        if user and not self.instance.pk:
+            full_name = f"{user.first_name} {user.last_name}".strip()
+            if full_name and full_name != " ":
+                self.initial['autorzy_wpisu'] = full_name
+            else:
+                # Fallback to username if no first/last name set
+                self.initial['autorzy_wpisu'] = user.username
 
 
 class FotoForm(forms.ModelForm):
@@ -132,10 +170,18 @@ class CustomUserCreationForm(UserCreationForm):
         'class': 'form-control',
         'placeholder': 'Wprowadź adres email'
     }))
+    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Wprowadź imię'
+    }))
+    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Wprowadź nazwisko'
+    }))
     
     class Meta:
         model = User
-        fields = ("username", "email", "password1", "password2")
+        fields = ("username", "first_name", "last_name", "email", "password1", "password2")
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -155,6 +201,8 @@ class CustomUserCreationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
         if commit:
             user.save()
         return user

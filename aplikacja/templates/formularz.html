@@ -88,12 +88,14 @@
         .form-control, .form-select {
             border: 2px solid var(--light-brown);
             border-radius: 8px;
-            padding: 12px 15px;
+            padding: 15px 18px;
             background: var(--cream);
             transition: all 0.3s ease;
             font-family: inherit;
             width: 100%;
-            min-width: 300px;
+            min-width: 350px;
+            font-size: 16px;
+            line-height: 1.5;
         }
 
         .form-control:focus, .form-select:focus {
@@ -107,9 +109,11 @@
             background: white;
         }
 
-        /* Make text areas even wider */
+        /* Make text areas even wider and taller */
         .form-control[rows] {
-            min-width: 400px;
+            min-width: 450px;
+            min-height: 120px;
+            resize: vertical;
         }
 
         /* Improve form layout for better field spacing */
@@ -120,11 +124,26 @@
         /* Make input containers responsive but maintain good width */
         @media (min-width: 768px) {
             .form-control, .form-select {
-                min-width: 400px;
+                min-width: 450px;
+                padding: 16px 20px;
             }
             
             .form-control[rows] {
+                min-width: 550px;
+                min-height: 140px;
+            }
+        }
+
+        /* Large screens get even bigger fields */
+        @media (min-width: 1200px) {
+            .form-control, .form-select {
                 min-width: 500px;
+                padding: 18px 22px;
+            }
+            
+            .form-control[rows] {
+                min-width: 600px;
+                min-height: 160px;
             }
         }
 

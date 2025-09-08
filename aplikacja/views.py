@@ -107,9 +107,9 @@ def formularz(request):
     if request.method == 'POST':
         # Use appropriate form based on user role
         if is_editor:
-            obiekt_form = RedaktorObiektForm(request.POST)
+            obiekt_form = RedaktorObiektForm(request.POST, user=request.user)
         else:
-            obiekt_form = ObiektForm(request.POST)
+            obiekt_form = ObiektForm(request.POST, user=request.user)
         foto_formset = FotoFormSet(request.POST, request.FILES)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
@@ -147,9 +147,9 @@ def formularz(request):
     else:
         # Use appropriate form based on user role
         if is_editor:
-            obiekt_form = RedaktorObiektForm()
+            obiekt_form = RedaktorObiektForm(user=request.user)
         else:
-            obiekt_form = ObiektForm()
+            obiekt_form = ObiektForm(user=request.user)
         foto_formset = FotoFormSet()
 
     return render(request, 'formularz.html', {
@@ -331,9 +331,9 @@ def edytuj_roboczy(request, obiekt_id):
     if request.method == 'POST':
         # Use appropriate form based on user role
         if is_editor:
-            obiekt_form = RedaktorObiektForm(request.POST, instance=obiekt)
+            obiekt_form = RedaktorObiektForm(request.POST, instance=obiekt, user=request.user)
         else:
-            obiekt_form = ObiektForm(request.POST, instance=obiekt)
+            obiekt_form = ObiektForm(request.POST, instance=obiekt, user=request.user)
         foto_formset = FotoEditFormSet(request.POST, request.FILES, instance=obiekt)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
@@ -367,9 +367,9 @@ def edytuj_roboczy(request, obiekt_id):
     else:
         # Use appropriate form based on user role
         if is_editor:
-            obiekt_form = RedaktorObiektForm(instance=obiekt)
+            obiekt_form = RedaktorObiektForm(instance=obiekt, user=request.user)
         else:
-            obiekt_form = ObiektForm(instance=obiekt)
+            obiekt_form = ObiektForm(instance=obiekt, user=request.user)
         foto_formset = FotoEditFormSet(instance=obiekt)
 
     return render(request, 'edytuj_roboczy.html', {
