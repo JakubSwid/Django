@@ -235,6 +235,36 @@
             margin-bottom: 20px;
         }
 
+        /* Pagination styles */
+        .pagination {
+            margin: 30px 0;
+        }
+
+        .pagination .page-link {
+            background: linear-gradient(135deg, var(--beige) 0%, var(--cream) 100%);
+            border: 2px solid var(--light-brown);
+            color: var(--dark-brown);
+            padding: 10px 15px;
+            margin: 0 3px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .pagination .page-link:hover {
+            background: linear-gradient(135deg, var(--light-brown) 0%, var(--primary-brown) 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary-brown) 0%, var(--dark-brown) 100%);
+            color: white;
+            border-color: var(--dark-brown);
+        }
+
         /* Media queries dla responsywności */
         @media (max-width: 768px) {
             .page-container {
@@ -385,6 +415,45 @@
                     </div>
                 {% endfor %}
             </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.lokalizacja %}&lokalizacja={{ request.GET.lokalizacja }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i> Pierwsza
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.lokalizacja %}&lokalizacja={{ request.GET.lokalizacja }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i> Poprzednia
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Strona {{ page_obj.number }} z {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.lokalizacja %}&lokalizacja={{ request.GET.lokalizacja }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}">
+                                    Następna <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.lokalizacja %}&lokalizacja={{ request.GET.lokalizacja }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}">
+                                    Ostatnia <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
         {% else %}
             <div class="no-objects">
                 <i class="fas fa-search fa-3x mb-3"></i>

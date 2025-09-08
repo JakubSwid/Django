@@ -70,6 +70,14 @@ class Obiekt(models.Model):
     class Meta:
         verbose_name = "Obiekt"
         verbose_name_plural = "Obiekty"
+        indexes = [
+            models.Index(fields=['wojewodztwo']),
+            models.Index(fields=['powiat']),
+            models.Index(fields=['typ_obiektu']),
+            models.Index(fields=['lokalizacja']),
+            models.Index(fields=['status']),
+            models.Index(fields=['nazwa_geograficzna_polska']),
+        ]
 
 class Foto(models.Model):
     obiekt = models.ForeignKey('Obiekt', related_name='zdjecia', on_delete=models.CASCADE)
