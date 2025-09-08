@@ -65,6 +65,42 @@ def find_photo_file(photo_name, photos_base_dir):
     return None
 
 
+def detect_encoding(file_path):
+    """
+    Detect the best encoding for reading the CSV file with Polish characters.
+
+    Args:
+        file_path (str): Path to the CSV file
+
+    Returns:
+        str: Best encoding to use
+    """
+    # List of encodings commonly used for Polish text
+    encodings_to_try = [
+        'utf-8-sig',  # UTF-8 with BOM (Excel often saves with this)
+        'utf-8',  # Standard UTF-8
+        'cp1250',  # Windows Central European
+        'iso-8859-2',  # Latin-2 Central European
+        'windows-1252'  # Windows Western European (fallback)
+    ]
+
+    for encoding in encodings_to_try:
+        try:
+            with open(file_path, 'r', encoding=encoding, newline='') as test_file:
+                # Try to read first few lines to test encoding
+                for _ in range(5):
+                    line = test_file.readline()
+                    if not line:
+                        break
+                # If we got here without error, this encoding works
+                return encoding
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+
+    # If all encodings fail, default to utf-8 and let it raise an error
+    return 'utf-8'
+
+
 def import_objects_from_csv(file_path, photos_base_dir=None):
     """
     Import Obiekt data and associated photos from a CSV file with comma-separated values.
@@ -81,7 +117,10 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
     error_messages = []
 
     try:
-        with open(file_path, 'r', encoding='utf-8') as csvfile:
+        # Detect the best encoding for the file
+        encoding = detect_encoding(file_path)
+
+        with open(file_path, 'r', encoding=encoding, newline='') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
 
             for row in reader:
@@ -91,19 +130,20 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
 
                     # Prepare data for Obiekt creation
                     obiekt_data = {
-                        'polozenie_szerokosc': float(row['polozenie_szerokosc']) if row.get(
+                        'polozenie_szerokosc': float(row['polozenie_szerokosc'].replace(',', '.')) if row.get(
                             'polozenie_szerokosc') else None,
-                        'polozenie_dlugosc': float(row['polozenie_dlugosc']) if row.get('polozenie_dlugosc') else None,
+                        'polozenie_dlugosc': float(row['polozenie_dlugosc'].replace(',', '.')) if row.get(
+                            'polozenie_dlugosc') else None,
                         'obiekt': row.get('obiekt', ''),
                         'nazwa_geograficzna_polska': row['nazwa_geograficzna_polska'],
                         'nazwa_geograficzna_obca': row.get('nazwa_geograficzna_obca', ''),
                         'wojewodztwo': row.get('wojewodztwo', ''),
-                        'powiat': row['powiat'],
+                        'powiat': row.get('powiat', ''),
                         'lokalizacja': row.get('lokalizacja', ''),
                         'typ_obiektu': row['typ_obiektu'],
                         'material': row.get('material', ''),
-                        'wysokosc': float(row['wysokosc']) if row.get('wysokosc') else None,
-                        'szerokosc': float(row['szerokosc']) if row.get('szerokosc') else None,
+                        'wysokosc': float(row['wysokosc'].replace(',', '.')) if row.get('wysokosc') else None,
+                        'szerokosc': float(row['szerokosc'].replace(',', '.')) if row.get('szerokosc') else None,
                         'opis': row.get('opis', ''),
                         'inskrypcja': row.get('inskrypcja', ''),
                         'typ_pisma': row.get('typ_pisma', ''),
@@ -185,6 +225,10 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
 
     except FileNotFoundError:
         error_messages.append(f"File not found: {file_path}")
+        error_count += 1
+    except UnicodeDecodeError as e:
+        error_messages.append(
+            f"Unicode decode error: {str(e)}. File may contain characters that cannot be decoded with any supported encoding.")
         error_count += 1
     except Exception as e:
         error_messages.append(f"Unexpected error: {str(e)}")
