@@ -17,7 +17,7 @@ def redaktor_required(view_func):
 
 
 def redaktor_or_own_draft_required(view_func):
-    """Decorator to allow editors to edit any object or users to edit their own draft objects"""
+    """Do edytowania swoich obiektów"""
     @wraps(view_func)
     @login_required
     def wrapper(request, obiekt_id, *args, **kwargs):

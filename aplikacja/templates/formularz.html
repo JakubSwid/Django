@@ -92,6 +92,8 @@
             background: var(--cream);
             transition: all 0.3s ease;
             font-family: inherit;
+            width: 100%;
+            min-width: 300px;
         }
 
         .form-control:focus, .form-select:focus {
@@ -103,6 +105,27 @@
         .form-control:hover, .form-select:hover {
             border-color: var(--primary-brown);
             background: white;
+        }
+
+        /* Make text areas even wider */
+        .form-control[rows] {
+            min-width: 400px;
+        }
+
+        /* Improve form layout for better field spacing */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        /* Make input containers responsive but maintain good width */
+        @media (min-width: 768px) {
+            .form-control, .form-select {
+                min-width: 400px;
+            }
+            
+            .form-control[rows] {
+                min-width: 500px;
+            }
         }
 
         .photo-section {

@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.conf import settings
 from .models import Obiekt, Foto
+from PIL import Image
+import io
 
 
 def save_uploaded_photos(uploaded_files):
@@ -63,6 +65,56 @@ def find_photo_file(photo_name, photos_base_dir):
             return os.path.join(root, photo_filename)
 
     return None
+
+
+def optimize_image(image_path, max_width=1200, max_height=800, quality=85):
+    """
+    Optimize image by resizing and compressing it.
+
+    Args:
+        image_path (str): Path to the image file
+        max_width (int): Maximum width in pixels
+        max_height (int): Maximum height in pixels
+        quality (int): JPEG quality (1-100)
+
+    Returns:
+        str: Path to optimized image (temporary file)
+    """
+    try:
+        with Image.open(image_path) as img:
+            # Convert to RGB if necessary (for JPEG compatibility)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+
+            # Calculate new size maintaining aspect ratio
+            img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+            # Create temporary file for optimized image
+            temp_dir = tempfile.mkdtemp()
+            filename = os.path.basename(image_path)
+            name, ext = os.path.splitext(filename)
+
+            # Force JPEG extension for better compression
+            optimized_path = os.path.join(temp_dir, f"{name}_optimized.jpg")
+
+            # Save optimized image
+            img.save(optimized_path, 'JPEG', quality=quality, optimize=True)
+
+            # Check file size reduction
+            original_size = os.path.getsize(image_path)
+            optimized_size = os.path.getsize(optimized_path)
+            reduction_percent = ((original_size - optimized_size) / original_size) * 100
+
+            print(f"Image optimized: {filename}")
+            print(f"  Original: {original_size / 1024 / 1024:.2f} MB")
+            print(f"  Optimized: {optimized_size / 1024 / 1024:.2f} MB")
+            print(f"  Reduction: {reduction_percent:.1f}%")
+
+            return optimized_path
+
+    except Exception as e:
+        print(f"Error optimizing image {image_path}: {e}")
+        return image_path  # Return original if optimization fails
 
 
 def detect_encoding(file_path):
@@ -207,10 +259,27 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                                 error_messages.append(f"Photo file not found: {photo_name} for object {obiekt}")
                                 continue
 
-                            with open(photo_path, 'rb') as photo_file:
+                            # OPTIMIZE IMAGE BEFORE SAVING
+                            optimized_photo_path = optimize_image(photo_path)
+
+                            with open(optimized_photo_path, 'rb') as photo_file:
                                 foto = Foto(obiekt=obiekt)
                                 filename = os.path.basename(photo_path)
-                                foto.plik.save(filename, File(photo_file), save=True)
+                                # Change extension to .jpg for optimized images
+                                name, ext = os.path.splitext(filename)
+                                optimized_filename = f"{name}.jpg"
+                                foto.plik.save(optimized_filename, File(photo_file), save=True)
+
+                            # Clean up temporary optimized file
+                            if optimized_photo_path != photo_path:
+                                try:
+                                    os.remove(optimized_photo_path)
+                                    # Also remove the temporary directory if empty
+                                    temp_dir = os.path.dirname(optimized_photo_path)
+                                    if os.path.exists(temp_dir) and not os.listdir(temp_dir):
+                                        os.rmdir(temp_dir)
+                                except OSError:
+                                    pass
 
                         except Exception as e:
                             error_count += 1

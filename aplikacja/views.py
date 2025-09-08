@@ -3,6 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from .models import Obiekt, Foto
 from django.db.models import Q
 from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm, RedaktorObiektForm
@@ -27,7 +28,10 @@ def szczegoly_obiektu(request, obiekt_id):
 
 def rekordy(request):
     form = ObiektFilterForm(request.GET or None)
-    obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
+    
+    # Start with published objects only, optimized with select_related for photos count
+    obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
+    
     if form.is_valid():
         # Zbierz filtry (pomijaj puste wartości)
         filters = {}
@@ -35,8 +39,19 @@ def rekordy(request):
             value = form.cleaned_data.get(field)
             if value:
                 filters[field] = value
-        obiekty = obiekty.filter(**filters)
-    return render(request, 'rekordy.html', {'obiekty': obiekty, 'form': form})
+        if filters:
+            obiekty = obiekty.filter(**filters)
+    
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'rekordy.html', {
+        'obiekty': page_obj,
+        'form': form,
+        'page_obj': page_obj
+    })
 
 
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
@@ -51,10 +66,11 @@ def wyszukaj(request):
     if not any([query, wojewodztwo, powiat, typ_obiektu, material]):
         obiekty = Obiekt.objects.none()
     else:
-        obiekty = Obiekt.objects.all()
+        # Start with published objects only and prefetch photos
+        obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
 
     # Fuzzy search using Q objects for general query
-    if query!="":
+    if query != "":
         obiekty = obiekty.filter(
             Q(nazwa_geograficzna_polska__icontains=query) |
             Q(opis__icontains=query) |
@@ -71,10 +87,15 @@ def wyszukaj(request):
     if material:
         obiekty = obiekty.filter(material__icontains=material)
 
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'obiekty': obiekty,
-        'request': request
+        'obiekty': page_obj,
+        'request': request,
+        'page_obj': page_obj
     }
     return render(request, 'main.html', context)
 
@@ -271,12 +292,18 @@ def moje_zgloszenia(request):
     
     obiekty = obiekty.order_by('-id')
     
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'obiekty': obiekty,
+        'obiekty': page_obj,
         'user': request.user,
         'is_editor': is_editor,
         'filter_form': filter_form,
         'current_status': request.GET.get('status', 'weryfikacja' if is_editor and not request.GET else ''),
+        'page_obj': page_obj
     }
     return render(request, 'moje_zgloszenia.html', context)
 

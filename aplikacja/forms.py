@@ -99,10 +99,32 @@ class ObiektFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields['wojewodztwo'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('wojewodztwo', flat=True).distinct().order_by('wojewodztwo') if v]
-        self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('powiat', flat=True).distinct().order_by('powiat') if v]
-        self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('lokalizacja', flat=True).distinct().order_by('lokalizacja') if v]
-        self.fields['typ_obiektu'].choices = [('', 'Wszystkie')] + [(v, v) for v in Obiekt.objects.values_list('typ_obiektu', flat=True).distinct().order_by('typ_obiektu') if v]
+        # Use a single query to get all distinct values at once - more efficient
+        distinct_values = Obiekt.objects.filter(status='opublikowany').values_list(
+            'wojewodztwo', 'powiat', 'lokalizacja', 'typ_obiektu'
+        ).distinct()
+        
+        # Collect unique values for each field
+        wojewodztwa = set()
+        powiaty = set()
+        lokalizacje = set()
+        typy_obiektow = set()
+        
+        for wojewodztwo, powiat, lokalizacja, typ_obiektu in distinct_values:
+            if wojewodztwo:
+                wojewodztwa.add(wojewodztwo)
+            if powiat:
+                powiaty.add(powiat)
+            if lokalizacja:
+                lokalizacje.add(lokalizacja)
+            if typ_obiektu:
+                typy_obiektow.add(typ_obiektu)
+
+        # Sort and create choices
+        self.fields['wojewodztwo'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(wojewodztwa)]
+        self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(powiaty)]
+        self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(lokalizacje)]
+        self.fields['typ_obiektu'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(typy_obiektow)]
 
 
 class CustomUserCreationForm(UserCreationForm):
