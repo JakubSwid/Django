@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load permission_tags %}
 
 {% block title %}Szczegóły obiektu: {{ obiekt.nazwa_geograficzna_polska }}{% endblock %}
 
@@ -283,6 +284,27 @@
             margin-bottom: 15px;
         }
         
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .btn-edit:hover {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
         @media (max-width: 768px) {
             .zdjecia-container {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -536,13 +558,20 @@
                              alt="{{ zdjecie.opis|default:'Zdjęcie' }}"
                              class="zdjecie"
                              onclick="openLightbox('{{ zdjecie.plik.url }}')">
-                        <div class="photo-overlay">
-                            <i class="fas fa-search-plus"></i>
-                        </div>
+
                     </div>
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
+
+        <!-- Edit button for editors or object owners -->
+        {% if user|can_edit_obiekt:obiekt %}
+            <div class="text-center mb-3">
+                <a href="{% url 'edytuj_roboczy' obiekt.id %}" class="btn btn-edit">
+                    <i class="fas fa-edit"></i> Edytuj obiekt
+                </a>
+            </div>
         {% endif %}
 
         <a href="{% url 'rekordy' %}" class="back-link">

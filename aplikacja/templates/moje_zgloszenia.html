@@ -218,6 +218,20 @@
         color: white;
         text-decoration: none;
     }
+
+    .form-select {
+        border: 2px solid var(--light-brown);
+        border-radius: 8px;
+        padding: 8px 12px;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+
+    .form-select:focus {
+        border-color: var(--primary-brown);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+        outline: none;
+    }
 </style>
 {% endblock %}
 
@@ -225,17 +239,50 @@
 <div class="container">
     <div class="page-header text-center">
         <div class="container">
-            <h1><i class="fas fa-user-edit"></i> Moje zgłoszenia</h1>
-            <p class="lead mb-0">Zarządzaj swoimi obiektami i śledź ich status</p>
+            <h1><i class="fas fa-user-edit"></i> {% if is_editor %}Zgłoszenia{% else %}Moje zgłoszenia{% endif %}</h1>
+            <p class="lead mb-0">{% if is_editor %}Zarządzaj wszystkimi zgłoszeniami użytkowników{% else %}Zarządzaj swoimi obiektami i śledź ich status{% endif %}</p>
         </div>
     </div>
+
+    {% if is_editor %}
+        <!-- Status filter for editors -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card" style="border: 2px solid var(--light-brown); border-radius: 12px;">
+                    <div class="card-header" style="background: linear-gradient(135deg, var(--light-brown) 0%, var(--beige) 100%); border-bottom: 2px solid var(--primary-brown);">
+                        <h5 class="mb-0"><i class="fas fa-filter"></i> Filtruj zgłoszenia</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" class="row g-3">
+                            <div class="col-md-4">
+                                {{ filter_form.status.label_tag }}
+                                {{ filter_form.status }}
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn" style="background: linear-gradient(135deg, var(--primary-brown) 0%, var(--dark-brown) 100%); color: white; border: none;">
+                                    <i class="fas fa-search"></i> Filtruj
+                                </button>
+                                <a href="{% url 'moje_zgloszenia' %}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-times"></i> Wyczyść
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     {% if obiekty %}
         <div class="row">
             <div class="col-12 mb-4">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i>
-                    Masz łącznie <strong>{{ obiekty.count }}</strong> zgłoszenie{{ obiekty.count|pluralize:"nie,nia,ń" }}.
+                    {% if is_editor %}
+                        Wyświetlanych jest <strong>{{ obiekty.count }}</strong> zgłoszenie{{ obiekty.count|pluralize:"nie,nia,ń" }}{% if current_status %} ze statusem <strong>{{ obiekty.first.get_status_display }}</strong>{% endif %}.
+                    {% else %}
+                        Masz łącznie <strong>{{ obiekty.count }}</strong> zgłoszenie{{ obiekty.count|pluralize:"nie,nia,ń" }}.
+                    {% endif %}
                 </div>
             </div>
         </div>

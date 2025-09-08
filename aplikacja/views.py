@@ -3,12 +3,13 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from .models import Obiekt, Foto
 from django.db.models import Q
-from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm
+from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm, RedaktorObiektForm
 from django.forms import inlineformset_factory
 from .utils import import_objects_from_csv, save_uploaded_photos
-from .decorators import redaktor_required, own_draft_object_required
+from .decorators import redaktor_required, redaktor_or_own_draft_required
 from django.core.files.storage import FileSystemStorage
 import os
 import tempfile
@@ -27,7 +28,10 @@ def szczegoly_obiektu(request, obiekt_id):
 
 def rekordy(request):
     form = ObiektFilterForm(request.GET or None)
-    obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
+    
+    # Start with published objects only, optimized with select_related for photos count
+    obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
+    
     if form.is_valid():
         # Zbierz filtry (pomijaj puste wartości)
         filters = {}
@@ -35,8 +39,19 @@ def rekordy(request):
             value = form.cleaned_data.get(field)
             if value:
                 filters[field] = value
-        obiekty = obiekty.filter(**filters)
-    return render(request, 'rekordy.html', {'obiekty': obiekty, 'form': form})
+        if filters:
+            obiekty = obiekty.filter(**filters)
+    
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'rekordy.html', {
+        'obiekty': page_obj,
+        'form': form,
+        'page_obj': page_obj
+    })
 
 
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
@@ -51,10 +66,11 @@ def wyszukaj(request):
     if not any([query, wojewodztwo, powiat, typ_obiektu, material]):
         obiekty = Obiekt.objects.none()
     else:
-        obiekty = Obiekt.objects.all()
+        # Start with published objects only and prefetch photos
+        obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
 
     # Fuzzy search using Q objects for general query
-    if query!="":
+    if query != "":
         obiekty = obiekty.filter(
             Q(nazwa_geograficzna_polska__icontains=query) |
             Q(opis__icontains=query) |
@@ -71,33 +87,49 @@ def wyszukaj(request):
     if material:
         obiekty = obiekty.filter(material__icontains=material)
 
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'obiekty': obiekty,
-        'request': request
+        'obiekty': page_obj,
+        'request': request,
+        'page_obj': page_obj
     }
     return render(request, 'main.html', context)
 
 @login_required
 def formularz(request):
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
+    
     if request.method == 'POST':
-        obiekt_form = ObiektForm(request.POST)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(request.POST)
+        else:
+            obiekt_form = ObiektForm(request.POST)
         foto_formset = FotoFormSet(request.POST, request.FILES)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
             obiekt = obiekt_form.save(commit=False)
             obiekt.user = request.user
             
-            # Determine action based on button clicked
-            if 'zapisz_roboczy' in request.POST:
-                obiekt.status = 'roboczy'
-                success_message = 'Obiekt został zapisany jako roboczy!'
-            elif 'wyslij_weryfikacja' in request.POST:
-                obiekt.status = 'weryfikacja'
-                success_message = 'Obiekt został wysłany do weryfikacji!'
+            if is_editor:
+                # For editors, use status from form
+                success_message = 'Obiekt został pomyślnie zapisany!'
             else:
-                obiekt.status = 'roboczy'  # Default
-                success_message = 'Obiekt został pomyślnie dodany!'
+                # For regular users, determine action based on button clicked
+                if 'zapisz_roboczy' in request.POST:
+                    obiekt.status = 'roboczy'
+                    success_message = 'Obiekt został zapisany jako roboczy!'
+                elif 'wyslij_weryfikacja' in request.POST:
+                    obiekt.status = 'weryfikacja'
+                    success_message = 'Obiekt został wysłany do weryfikacji!'
+                else:
+                    obiekt.status = 'roboczy'  # Default
+                    success_message = 'Obiekt został pomyślnie dodany!'
             
             obiekt.save()
 
@@ -113,12 +145,17 @@ def formularz(request):
             if not foto_formset.is_valid():
                 messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
-        obiekt_form = ObiektForm()
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm()
+        else:
+            obiekt_form = ObiektForm()
         foto_formset = FotoFormSet()
 
     return render(request, 'formularz.html', {
         'obiekt_form': obiekt_form,
-        'foto_formset': foto_formset
+        'foto_formset': foto_formset,
+        'is_editor': is_editor
     })
 
 
@@ -226,20 +263,58 @@ def logout_view(request):
 
 @login_required
 def moje_zgloszenia(request):
-    """View to display user's own objects"""
-    user_obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia').order_by('-id')
+    """View to display user's own objects or all objects for editors"""
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
+    
+    # Initialize filter form
+    filter_form = StatusFilterForm(request.GET or None)
+    
+    if is_editor:
+        # For editors, show all objects
+        obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
+        
+        # Apply status filter with default to 'weryfikacja' for editors
+        status_filter = request.GET.get('status', 'weryfikacja' if not request.GET else '')
+        if status_filter:
+            obiekty = obiekty.filter(status=status_filter)
+        elif not request.GET:  # Default filter only on initial page load
+            obiekty = obiekty.filter(status='weryfikacja')
+    else:
+        # For regular users, show only their own objects
+        obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia')
+        
+        # Apply status filter if provided
+        if filter_form.is_valid():
+            status = filter_form.cleaned_data.get('status')
+            if status:
+                obiekty = obiekty.filter(status=status)
+    
+    obiekty = obiekty.order_by('-id')
+    
+    # Add pagination - 12 objects per page
+    paginator = Paginator(obiekty, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'obiekty': user_obiekty,
-        'user': request.user
+        'obiekty': page_obj,
+        'user': request.user,
+        'is_editor': is_editor,
+        'filter_form': filter_form,
+        'current_status': request.GET.get('status', 'weryfikacja' if is_editor and not request.GET else ''),
+        'page_obj': page_obj
     }
     return render(request, 'moje_zgloszenia.html', context)
 
 
-@own_draft_object_required
+@redaktor_or_own_draft_required
 def edytuj_roboczy(request, obiekt_id):
-    """View to edit draft objects"""
+    """View to edit draft objects (or any objects for editors)"""
     obiekt = get_object_or_404(Obiekt, id=obiekt_id)
+    
+    # Check if user is editor
+    is_editor = request.user.groups.filter(name='Redaktor').exists()
     
     # Create formset for existing photos
     FotoEditFormSet = inlineformset_factory(
@@ -254,22 +329,30 @@ def edytuj_roboczy(request, obiekt_id):
     )
     
     if request.method == 'POST':
-        obiekt_form = ObiektForm(request.POST, instance=obiekt)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(request.POST, instance=obiekt)
+        else:
+            obiekt_form = ObiektForm(request.POST, instance=obiekt)
         foto_formset = FotoEditFormSet(request.POST, request.FILES, instance=obiekt)
 
         if obiekt_form.is_valid() and foto_formset.is_valid():
             obiekt = obiekt_form.save(commit=False)
             
-            # Determine action based on button clicked
-            if 'zapisz_roboczy' in request.POST:
-                obiekt.status = 'roboczy'
-                success_message = 'Obiekt został zaktualizowany jako roboczy!'
-            elif 'wyslij_weryfikacja' in request.POST:
-                obiekt.status = 'weryfikacja'
-                success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
-            else:
-                obiekt.status = 'roboczy'  # Default
+            if is_editor:
+                # For editors, use status from form
                 success_message = 'Obiekt został pomyślnie zaktualizowany!'
+            else:
+                # For regular users, determine action based on button clicked
+                if 'zapisz_roboczy' in request.POST:
+                    obiekt.status = 'roboczy'
+                    success_message = 'Obiekt został zaktualizowany jako roboczy!'
+                elif 'wyslij_weryfikacja' in request.POST:
+                    obiekt.status = 'weryfikacja'
+                    success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
+                else:
+                    obiekt.status = 'roboczy'  # Default
+                    success_message = 'Obiekt został pomyślnie zaktualizowany!'
             
             obiekt.save()
 
@@ -282,11 +365,16 @@ def edytuj_roboczy(request, obiekt_id):
             if not foto_formset.is_valid():
                 messages.error(request, 'Wystąpił błąd podczas zapisywania zdjęć!')
     else:
-        obiekt_form = ObiektForm(instance=obiekt)
+        # Use appropriate form based on user role
+        if is_editor:
+            obiekt_form = RedaktorObiektForm(instance=obiekt)
+        else:
+            obiekt_form = ObiektForm(instance=obiekt)
         foto_formset = FotoEditFormSet(instance=obiekt)
 
     return render(request, 'edytuj_roboczy.html', {
         'obiekt_form': obiekt_form,
         'foto_formset': foto_formset,
-        'obiekt': obiekt
+        'obiekt': obiekt,
+        'is_editor': is_editor
     })

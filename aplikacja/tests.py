@@ -59,7 +59,7 @@ class FormSystemTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_edit_draft_permissions(self):
-        """Test that users can only edit their own draft objects"""
+        """Test that users can only edit their own draft objects but editors can edit any object"""
         # Create a draft object for user
         draft_obj = Obiekt.objects.create(
             nazwa_geograficzna_polska='User Draft',
@@ -73,10 +73,10 @@ class FormSystemTestCase(TestCase):
         response = self.client.get(reverse('edytuj_roboczy', args=[draft_obj.id]))
         self.assertEqual(response.status_code, 200)
         
-        # Editor should not be able to access user's draft
+        # Editor should now be able to access user's draft (changed behavior)
         self.client.login(username='editor', password='editorpass123')
         response = self.client.get(reverse('edytuj_roboczy', args=[draft_obj.id]))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_template_tags(self):
         """Test permission template tags work correctly"""
@@ -95,7 +95,8 @@ class FormSystemTestCase(TestCase):
         )
         
         self.assertTrue(can_edit_obiekt(self.user, draft_obj))
-        self.assertFalse(can_edit_obiekt(self.editor, draft_obj))
+        # Editors can now edit any object (changed behavior)
+        self.assertTrue(can_edit_obiekt(self.editor, draft_obj))
         
         # Test non-draft object
         published_obj = Obiekt.objects.create(
@@ -105,4 +106,7 @@ class FormSystemTestCase(TestCase):
             user=self.user
         )
         
+        # Regular users can't edit non-draft objects
         self.assertFalse(can_edit_obiekt(self.user, published_obj))
+        # But editors can edit any object
+        self.assertTrue(can_edit_obiekt(self.editor, published_obj))
