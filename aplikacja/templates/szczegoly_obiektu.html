@@ -557,7 +557,7 @@
                         <img src="{{ zdjecie.plik.url }}"
                              alt="{{ zdjecie.opis|default:'Zdjęcie' }}"
                              class="zdjecie"
-                             onclick="openLightbox('{{ zdjecie.plik.url }}')">
+                             onclick="openLightbox('{% if zdjecie.plik_oryginalny %}{{ zdjecie.plik_oryginalny.url }}{% else %}{{ zdjecie.plik.url }}{% endif %}')">
 
                     </div>
                 {% endfor %}

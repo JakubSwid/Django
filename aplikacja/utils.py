@@ -10,6 +10,56 @@ from PIL import Image
 import io
 
 
+def save_foto_with_compression(foto_instance, uploaded_file):
+    """
+    Save both original and compressed versions of an uploaded photo.
+    
+    Args:
+        foto_instance: Foto model instance
+        uploaded_file: Uploaded file from form
+    """
+    # Reset file position to beginning
+    uploaded_file.seek(0)
+    
+    # Save original image
+    foto_instance.plik_oryginalny.save(uploaded_file.name, uploaded_file, save=False)
+    
+    # Reset file position again for compression
+    uploaded_file.seek(0)
+    
+    # Create temporary file for compression
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+        temp_path = temp_file.name
+        
+        # Create compressed version
+        try:
+            with Image.open(uploaded_file) as img:
+                # Convert to RGB if necessary (for JPEG compatibility)
+                if img.mode in ('RGBA', 'P'):
+                    img = img.convert('RGB')
+                
+                # Calculate new size maintaining aspect ratio
+                img.thumbnail((1200, 800), Image.Resampling.LANCZOS)
+                
+                # Save compressed image
+                img.save(temp_path, 'JPEG', quality=85, optimize=True)
+        
+            # Save compressed image to model
+            with open(temp_path, 'rb') as compressed_file:
+                name, ext = os.path.splitext(uploaded_file.name)
+                compressed_filename = f"{name}_compressed.jpg"
+                foto_instance.plik.save(compressed_filename, File(compressed_file), save=False)
+                
+        finally:
+            # Clean up temporary file
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+    
+    foto_instance.save()
+
+
 def save_uploaded_photos(uploaded_files):
     """
     Save uploaded photos to a temporary directory and return the path.
@@ -300,16 +350,26 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                                 error_messages.append(f"Photo file not found: {photo_name} for object {obiekt}")
                                 continue
 
-                            # OPTIMIZE IMAGE BEFORE SAVING
+                            # SAVE BOTH ORIGINAL AND COMPRESSED IMAGES
                             optimized_photo_path = optimize_image(photo_path)
-
+                            
+                            foto = Foto(obiekt=obiekt)
+                            filename = os.path.basename(photo_path)
+                            name, ext = os.path.splitext(filename)
+                            
+                            # Save original image
+                            with open(photo_path, 'rb') as original_file:
+                                original_filename = f"{name}_original{ext}"
+                                foto.plik_oryginalny.save(original_filename, File(original_file), save=False)
+                            
+                            # Save compressed image
                             with open(optimized_photo_path, 'rb') as photo_file:
-                                foto = Foto(obiekt=obiekt)
-                                filename = os.path.basename(photo_path)
                                 # Change extension to .jpg for optimized images
-                                name, ext = os.path.splitext(filename)
                                 optimized_filename = f"{name}.jpg"
-                                foto.plik.save(optimized_filename, File(photo_file), save=True)
+                                foto.plik.save(optimized_filename, File(photo_file), save=False)
+                            
+                            # Save the Foto instance
+                            foto.save()
 
                             # Clean up temporary optimized file
                             if optimized_photo_path != photo_path:

@@ -81,7 +81,8 @@ class Obiekt(models.Model):
 
 class Foto(models.Model):
     obiekt = models.ForeignKey('Obiekt', related_name='zdjecia', on_delete=models.CASCADE)
-    plik = models.ImageField(upload_to='zdjecia/dodane')
+    plik = models.ImageField(upload_to='zdjecia/dodane')  # Compressed image for display
+    plik_oryginalny = models.ImageField(upload_to='zdjecia/oryginalne', blank=True, null=True)  # Original image
 
     def __str__(self):
         return f"Zdjęcie ({self.plik.name})"
