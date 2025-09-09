@@ -36,6 +36,7 @@ class ObiektForm(forms.ModelForm):
             'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD'}),
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan'}),
+
         }
 
 

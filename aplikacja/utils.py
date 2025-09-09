@@ -1,7 +1,7 @@
 import csv
 import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, date
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.conf import settings
@@ -153,6 +153,38 @@ def detect_encoding(file_path):
     return 'utf-8'
 
 
+def parse_date_field(date_value):
+    """
+    Parse date from various formats.
+
+    Args:
+        date_value (str): Date string to parse
+
+    Returns:
+        date or None: Parsed date object or None if parsing fails
+    """
+    if not date_value:
+        return None
+
+    # Try different date formats
+    date_formats = [
+        '%Y-%m-%d',  # 2024-01-15
+        '%d.%m.%Y',  # 15.01.2024
+        '%d/%m/%Y',  # 15/01/2024
+        '%d-%m-%Y',  # 15-01-2024
+        '%Y/%m/%d',  # 2024/01/15
+        '%Y.%m.%d',  # 2024.01.15
+    ]
+
+    for date_format in date_formats:
+        try:
+            return datetime.strptime(date_value, date_format).date()
+        except ValueError:
+            continue
+
+    return None
+
+
 def import_objects_from_csv(file_path, photos_base_dir=None):
     """
     Import Obiekt data and associated photos from a CSV file with comma-separated values.
@@ -168,6 +200,9 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
     error_count = 0
     error_messages = []
 
+    # Get current date for default values
+    current_date = date.today()
+
     try:
         # Detect the best encoding for the file
         encoding = detect_encoding(file_path)
@@ -179,6 +214,15 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                 try:
                     # Convert empty strings to None for nullable fields, safely handle None
                     row = {k: v if v and v.strip() else None for k, v in row.items()}
+
+                    # Parse date fields with fallback to current date
+                    data_wpisu = parse_date_field(row.get('data_wpisu'))
+                    if not data_wpisu:
+                        data_wpisu = current_date
+                        print(f"No 'data_wpisu' found in row {reader.line_num}, using current date: {current_date}")
+
+                    data_korekty_1 = parse_date_field(row.get('data_korekty_1'))
+                    data_korekty_2 = parse_date_field(row.get('data_korekty_2'))
 
                     # Prepare data for Obiekt creation
                     obiekt_data = {
@@ -205,14 +249,11 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                         'bibliografia': row.get('bibliografia', ''),
                         'odsylacze_do_zrodla': row.get('odsylacze_do_zrodla', ''),
                         'autorzy_wpisu': row.get('autorzy_wpisu', ''),
-                        'data_wpisu': datetime.strptime(row['data_wpisu'], '%Y-%m-%d').date() if row.get(
-                            'data_wpisu') else None,
+                        'data_wpisu': data_wpisu,  # Always has a value (current date if not provided)
                         'korekta_nr_1_autor': row.get('korekta_nr_1_autor', ''),
-                        'data_korekty_1': datetime.strptime(row['data_korekty_1'], '%Y-%m-%d').date() if row.get(
-                            'data_korekty_1') else None,
+                        'data_korekty_1': data_korekty_1,  # Can be None
                         'korekta_nr_2_autor': row.get('korekta_nr_2_autor', ''),
-                        'data_korekty_2': datetime.strptime(row['data_korekty_2'], '%Y-%m-%d').date() if row.get(
-                            'data_korekty_2') else None,
+                        'data_korekty_2': data_korekty_2,  # Can be None
                         'imie_nazwisko_osoby_upamietnionej': row.get('imie_nazwisko_osoby_upamietnionej', ''),
                         'skan_3d': row.get('skan_3d', ''),
                         'status': row.get('status', 'opublikowany')
@@ -283,17 +324,17 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
 
                         except Exception as e:
                             error_count += 1
-                            error_messages.append(f"Error adding photo {photo_name} for {obiekt}: {str(e)}")
+                            error_messages.append(f"Błąd przy dodawaniu zdjęcia {photo_name} dla {obiekt}: {str(e)}")
                             continue
 
                     success_count += 1
 
                 except (ValueError, ValidationError, KeyError) as e:
                     error_count += 1
-                    error_messages.append(f"Error in row {reader.line_num}: {str(e)}")
+                    error_messages.append(f"Błąd w rzędzie {reader.line_num}: {str(e)}")
 
     except FileNotFoundError:
-        error_messages.append(f"File not found: {file_path}")
+        error_messages.append(f"Plik nie znaleziony: {file_path}")
         error_count += 1
     except UnicodeDecodeError as e:
         error_messages.append(
