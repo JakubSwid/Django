@@ -8,7 +8,7 @@ from .models import Obiekt, Foto
 from django.db.models import Q
 from .forms import ObiektForm, FotoFormSet, ObiektFilterForm, CustomUserCreationForm, CustomAuthenticationForm, FotoForm, StatusFilterForm, RedaktorObiektForm
 from django.forms import inlineformset_factory
-from .utils import import_objects_from_csv, save_uploaded_photos
+from .utils import import_objects_from_csv, save_uploaded_photos, save_foto_with_compression
 from .decorators import redaktor_required, redaktor_or_own_draft_required
 from django.core.files.storage import FileSystemStorage
 import os
@@ -133,11 +133,15 @@ def formularz(request):
             
             obiekt.save()
 
-            # Save photos
+            # Save photos with compression
             fotos = foto_formset.save(commit=False)
             for foto in fotos:
                 foto.obiekt = obiekt
-                foto.save()
+                # Save both original and compressed versions
+                if foto.plik:  # If there's an uploaded file
+                    save_foto_with_compression(foto, foto.plik)
+                else:
+                    foto.save()
 
             messages.success(request, success_message)
             return redirect('moje_zgloszenia')

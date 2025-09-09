@@ -128,36 +128,78 @@ class ObiektFilterForm(forms.Form):
         self.fields['typ_obiektu'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(typy_obiektow)]
 
 
-class CustomUserCreationForm(UserCreationForm):
+class CustomUserCreationForm(forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        help_text='Możesz używać liter, cyfr, spacji oraz znaków @/./+/-/_',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Wprowadź imię i nazwisko lub nazwę użytkownika'
+        })
+    )
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control',
         'placeholder': 'Wprowadź adres email'
     }))
-    
-    class Meta:
-        model = User
-        fields = ("username", "email", "password1", "password2")
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Wprowadź nazwę użytkownika'
-        })
-        self.fields['password1'].widget.attrs.update({
+    password1 = forms.CharField(
+        label='Hasło',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Wprowadź hasło'
-        })
-        self.fields['password2'].widget.attrs.update({
+        }),
+        help_text='Hasło musi mieć co najmniej 8 znaków.'
+    )
+    password2 = forms.CharField(
+        label='Potwierdzenie hasła',
+        widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Potwierdź hasło'
-        })
+        }),
+        strip=False,
+        help_text='Wprowadź to samo hasło co wyżej, w celu weryfikacji.'
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username:
+            # Check if username already exists (case insensitive)
+            if User.objects.filter(username__iexact=username).exists():
+                raise forms.ValidationError('Użytkownik o tej nazwie już istnieje.')
+            
+            # Allow spaces, letters, numbers and some special characters
+            import re
+            if not re.match(r'^[a-zA-Z0-9\s@.+_-]+$', username):
+                raise forms.ValidationError('Nazwa użytkownika może zawierać tylko litery, cyfry, spacje oraz znaki @.+_-')
+                
+            # Username should not be only spaces
+            if username.strip() == '':
+                raise forms.ValidationError('Nazwa użytkownika nie może składać się tylko ze spacji.')
+                
+        return username
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Hasła się nie zgadzają.")
+        return password2
+
+    def clean_password1(self):
+        password1 = self.cleaned_data.get('password1')
+        if password1:
+            if len(password1) < 8:
+                raise forms.ValidationError("Hasło musi mieć co najmniej 8 znaków.")
+            if password1.isdigit():
+                raise forms.ValidationError("Hasło nie może składać się tylko z cyfr.")
+        return password1
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        if commit:
-            user.save()
+        user = User.objects.create_user(
+            username=self.cleaned_data["username"],
+            email=self.cleaned_data["email"],
+            password=self.cleaned_data["password1"]
+        )
         return user
 
 
