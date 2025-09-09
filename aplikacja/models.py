@@ -64,7 +64,7 @@ class Obiekt(models.Model):
         return self.nazwa_geograficzna_polska
 
     def clean(self):
-        if self.pk and self.zdjecia.count() > 10:
+        if self.pk and self.zdjecia.count() > 20:
             raise ValidationError("Obiekt może mieć maksymalnie 10 zdjęć.")
 
     class Meta:
