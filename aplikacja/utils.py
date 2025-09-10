@@ -38,7 +38,7 @@ def save_foto_with_compression(foto_instance, uploaded_file):
 
             with open(temp_path, 'rb') as compressed_file:
                 name, ext = os.path.splitext(uploaded_file.name)
-                compressed_filename = f"{name}_compressed.jpg"
+                compressed_filename = f"{name}_skompresowany.jpg"
                 foto_instance.plik.save(compressed_filename, File(compressed_file), save=False)
 
         finally:
@@ -124,7 +124,7 @@ def optimize_image(image_path, max_width=1200, max_height=800, quality=85):
             filename = os.path.basename(image_path)
             name, ext = os.path.splitext(filename)
 
-            optimized_path = os.path.join(temp_dir, f"{name}_optimized.jpg")
+            optimized_path = os.path.join(temp_dir, f"{name}_skompresowany.jpg")
 
             img.save(optimized_path, 'JPEG', quality=quality, optimize=True)
 
@@ -318,11 +318,11 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                             name, ext = os.path.splitext(filename)
 
                             with open(photo_path, 'rb') as original_file:
-                                original_filename = f"{name}_original{ext}"
+                                original_filename = f"{name}{ext}"
                                 foto.plik_oryginalny.save(original_filename, File(original_file), save=False)
 
                             with open(optimized_photo_path, 'rb') as photo_file:
-                                optimized_filename = f"{name}.jpg"
+                                optimized_filename = f"{name}_skompresowany.jpg"
                                 foto.plik.save(optimized_filename, File(photo_file), save=False)
 
                             foto.save()
