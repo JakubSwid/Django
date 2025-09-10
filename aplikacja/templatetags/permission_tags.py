@@ -5,7 +5,7 @@ register = template.Library()
 
 @register.filter
 def is_redaktor(user):
-    """Check if user is in Redaktor group"""
+    """Sprawdź czy użytkownik jest w grupie Redaktor"""
     if not user.is_authenticated:
         return False
     return user.groups.filter(name='Redaktor').exists()
@@ -13,21 +13,21 @@ def is_redaktor(user):
 
 @register.filter
 def can_edit_obiekt(user, obiekt):
-    """Check if user can edit the given object"""
+    """Sprawdź czy użytkownik może edytować dany obiekt"""
     if not user.is_authenticated:
         return False
     
-    # Editors can edit any object
+    # Redaktorzy mogą edytować dowolny obiekt
     if user.groups.filter(name='Redaktor').exists():
         return True
     
-    # Regular users can edit only their own draft objects
+    # Zwykli użytkownicy mogą edytować tylko swoje robocze obiekty
     return obiekt.user == user and obiekt.status == 'roboczy'
 
 
 @register.simple_tag
 def user_role_display(user):
-    """Display user's role"""
+    """Wyświetl rolę użytkownika"""
     if not user.is_authenticated:
         return "Gość"
     

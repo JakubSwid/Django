@@ -18,20 +18,20 @@ def save_foto_with_compression(foto_instance, uploaded_file):
         foto_instance: Foto model instance
         uploaded_file: Uploaded file from form
     """
-    # Reset file position to beginning
+    # Zresetuj pozycję pliku do początku
     uploaded_file.seek(0)
     
-    # Save original image
+    # Zapisz oryginalny obraz
     foto_instance.plik_oryginalny.save(uploaded_file.name, uploaded_file, save=False)
     
-    # Reset file position again for compression
+    # Zresetuj pozycję pliku ponownie dla kompresji
     uploaded_file.seek(0)
     
-    # Create temporary file for compression
+    # Utwórz plik tymczasowy dla kompresji
     with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
         temp_path = temp_file.name
         
-        # Create compressed version
+        # Utwórz skompresowaną wersję
         try:
             with Image.open(uploaded_file) as img:
                 # Convert to RGB if necessary (for JPEG compatibility)
@@ -41,10 +41,10 @@ def save_foto_with_compression(foto_instance, uploaded_file):
                 # Calculate new size maintaining aspect ratio
                 img.thumbnail((1200, 800), Image.Resampling.LANCZOS)
                 
-                # Save compressed image
+                # Zapisz skompresowany obraz
                 img.save(temp_path, 'JPEG', quality=85, optimize=True)
         
-            # Save compressed image to model
+            # Zapisz skompresowany obraz to model
             with open(temp_path, 'rb') as compressed_file:
                 name, ext = os.path.splitext(uploaded_file.name)
                 compressed_filename = f"{name}_compressed.jpg"
@@ -350,32 +350,32 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                                 error_messages.append(f"Photo file not found: {photo_name} for object {obiekt}")
                                 continue
 
-                            # SAVE BOTH ORIGINAL AND COMPRESSED IMAGES
+                            # ZAPISZ ZARÓWNO ORYGINALNY JAK I SKOMPRESOWANY OBRAZ
                             optimized_photo_path = optimize_image(photo_path)
                             
                             foto = Foto(obiekt=obiekt)
                             filename = os.path.basename(photo_path)
                             name, ext = os.path.splitext(filename)
                             
-                            # Save original image
+                            # Zapisz oryginalny obraz
                             with open(photo_path, 'rb') as original_file:
                                 original_filename = f"{name}_original{ext}"
                                 foto.plik_oryginalny.save(original_filename, File(original_file), save=False)
                             
-                            # Save compressed image
+                            # Zapisz skompresowany obraz
                             with open(optimized_photo_path, 'rb') as photo_file:
-                                # Change extension to .jpg for optimized images
+                                # Zmień rozszerzenie na .jpg dla zoptymalizowanych obrazów
                                 optimized_filename = f"{name}.jpg"
                                 foto.plik.save(optimized_filename, File(photo_file), save=False)
                             
-                            # Save the Foto instance
+                            # Zapisz instancję Foto
                             foto.save()
 
-                            # Clean up temporary optimized file
+                            # Wyczyść tymczasowy zoptymalizowany plik
                             if optimized_photo_path != photo_path:
                                 try:
                                     os.remove(optimized_photo_path)
-                                    # Also remove the temporary directory if empty
+                                    # Usuń także katalog tymczasowy jeśli jest pusty
                                     temp_dir = os.path.dirname(optimized_photo_path)
                                     if os.path.exists(temp_dir) and not os.listdir(temp_dir):
                                         os.rmdir(temp_dir)

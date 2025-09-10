@@ -5,36 +5,36 @@ from aplikacja.models import Obiekt
 
 
 class Command(BaseCommand):
-    help = 'Setup Redaktor group with proper permissions'
+    help = 'Konfiguruj grupę Redaktor z odpowiednimi uprawnieniami'
 
     def handle(self, *args, **options):
-        # Create or get the Redaktor group
+        # Utwórz lub pobierz grupę Redaktor
         redaktor_group, created = Group.objects.get_or_create(name='Redaktor')
         
         if created:
             self.stdout.write(
-                self.style.SUCCESS('Created Redaktor group')
+                self.style.SUCCESS('Utworzono grupę Redaktor')
             )
         else:
             self.stdout.write(
-                self.style.WARNING('Redaktor group already exists')
+                self.style.WARNING('Grupa Redaktor już istnieje')
             )
 
-        # Get content type for Obiekt model
+        # Pobierz typ zawartości dla modelu Obiekt
         obiekt_content_type = ContentType.objects.get_for_model(Obiekt)
         
-        # Get all permissions for Obiekt model
+        # Pobierz wszystkie uprawnienia dla modelu Obiekt
         permissions = Permission.objects.filter(content_type=obiekt_content_type)
         
-        # Add all permissions to the group
+        # Dodaj wszystkie uprawnienia do grupy
         for permission in permissions:
             redaktor_group.permissions.add(permission)
             self.stdout.write(
-                f'Added permission: {permission.name}'
+                f'Dodano uprawnienie: {permission.name}'
             )
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'Successfully configured Redaktor group with {permissions.count()} permissions'
+                f'Pomyślnie skonfigurowano grupę Redaktor z {permissions.count()} uprawnieniami'
             )
         )

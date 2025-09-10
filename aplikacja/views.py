@@ -29,7 +29,7 @@ def szczegoly_obiektu(request, obiekt_id):
 def rekordy(request):
     form = ObiektFilterForm(request.GET or None)
     
-    # Start with published objects only, optimized with select_related for photos count
+    # Zacznij tylko od opublikowanych obiektów, zoptymalizowanych z select_related dla liczby zdjęć
     obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
     
     if form.is_valid():
@@ -42,7 +42,7 @@ def rekordy(request):
         if filters:
             obiekty = obiekty.filter(**filters)
     
-    # Add pagination - 12 objects per page
+    # Dodaj paginację - 12 obiektów na stronę
     paginator = Paginator(obiekty, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -66,10 +66,10 @@ def wyszukaj(request):
     if not any([query, wojewodztwo, powiat, typ_obiektu, material]):
         obiekty = Obiekt.objects.none()
     else:
-        # Start with published objects only and prefetch photos
+        # Zacznij tylko od opublikowanych obiektów i pobierz z góry zdjęcia
         obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
 
-    # Fuzzy search using Q objects for general query
+    # Wyszukiwanie rozmyte używając obiektów Q dla ogólnego zapytania
     if query != "":
         obiekty = obiekty.filter(
             Q(nazwa_geograficzna_polska__icontains=query) |
@@ -77,7 +77,7 @@ def wyszukaj(request):
             Q(inskrypcja__icontains=query)
         )
 
-    # Additional filters
+    # Dodatkowe filtry
     if wojewodztwo:
         obiekty = obiekty.filter(wojewodztwo__icontains=wojewodztwo)
     if powiat:
@@ -87,7 +87,7 @@ def wyszukaj(request):
     if material:
         obiekty = obiekty.filter(material__icontains=material)
 
-    # Add pagination - 12 objects per page
+    # Dodaj paginację - 12 obiektów na stronę
     paginator = Paginator(obiekty, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -101,11 +101,11 @@ def wyszukaj(request):
 
 @login_required
 def formularz(request):
-    # Check if user is editor
+    # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
     
     if request.method == 'POST':
-        # Use appropriate form based on user role
+        # Użyj odpowiedniego formularza na podstawie roli użytkownika
         if is_editor:
             obiekt_form = RedaktorObiektForm(request.POST, user=request.user)
         else:
@@ -117,10 +117,10 @@ def formularz(request):
             obiekt.user = request.user
             
             if is_editor:
-                # For editors, use status from form
+                # Dla redaktorów, użyj statusu z formularza
                 success_message = 'Obiekt został pomyślnie zapisany!'
             else:
-                # For regular users, determine action based on button clicked
+                # Dla zwykłych użytkowników, określ akcję na podstawie klikniętego przycisku
                 if 'zapisz_roboczy' in request.POST:
                     obiekt.status = 'roboczy'
                     success_message = 'Obiekt został zapisany jako roboczy!'
@@ -128,17 +128,17 @@ def formularz(request):
                     obiekt.status = 'weryfikacja'
                     success_message = 'Obiekt został wysłany do weryfikacji!'
                 else:
-                    obiekt.status = 'roboczy'  # Default
+                    obiekt.status = 'roboczy'  # Domyślnie
                     success_message = 'Obiekt został pomyślnie dodany!'
             
             obiekt.save()
 
-            # Save photos with compression
+            # Zapisz zdjęcia z kompresją
             fotos = foto_formset.save(commit=False)
             for foto in fotos:
                 foto.obiekt = obiekt
-                # Save both original and compressed versions
-                if foto.plik:  # If there's an uploaded file
+                # Zapisz zarówno oryginalne jak i skompresowane wersje
+                if foto.plik:  # Jeśli jest przesłany plik
                     save_foto_with_compression(foto, foto.plik)
                 else:
                     foto.save()
@@ -149,7 +149,7 @@ def formularz(request):
             if not foto_formset.is_valid():
                 messages.error(request, 'Przynajmniej jedno zdjęcie jest wymagane!')
     else:
-        # Use appropriate form based on user role
+        # Użyj odpowiedniego formularza na podstawie roli użytkownika
         if is_editor:
             obiekt_form = RedaktorObiektForm(user=request.user)
         else:
@@ -174,36 +174,36 @@ def import_csv_view(request):
             return HttpResponseRedirect(request.path)
 
         try:
-            # Save CSV file temporarily
+            # Zapisz plik CSV tymczasowo
             with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as temp_csv:
                 for chunk in csv_file.chunks():
                     temp_csv.write(chunk)
                 temp_csv_path = temp_csv.name
 
-            # Save uploaded photos to temporary directory
+            # Zapisz przesłane zdjęcia do katalogu tymczasowego
             photos_base_dir = None
             if photos_files:
                 photos_base_dir = save_uploaded_photos(photos_files)
 
-            # Import data
+            # Importuj dane
             success_count, error_count, error_messages = import_objects_from_csv(
                 temp_csv_path,
                 photos_base_dir
             )
 
-            # Clean up temporary files
+            # Wyczyść pliki tymczasowe
             os.unlink(temp_csv_path)
             if photos_base_dir:
                 import shutil
                 shutil.rmtree(photos_base_dir, ignore_errors=True)
 
-            # Show results
+            # Pokaż wyniki
             if success_count > 0:
                 messages.success(request, f'Pomyślnie zaimportowano {success_count} obiektów.')
 
             if error_count > 0:
                 messages.warning(request, f'Wystąpiło {error_count} błędów podczas importu.')
-                for error_msg in error_messages[:10]:  # Show first 10 errors
+                for error_msg in error_messages[:10]:  # Pokaż pierwsze 10 błędów
                     messages.error(request, error_msg)
 
         except Exception as e:
@@ -268,27 +268,27 @@ def logout_view(request):
 @login_required
 def moje_zgloszenia(request):
     """View to display user's own objects or all objects for editors"""
-    # Check if user is editor
+    # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
     
-    # Initialize filter form
+    # Zainicjalizuj formularz filtra
     filter_form = StatusFilterForm(request.GET or None)
     
     if is_editor:
-        # For editors, show all objects
+        # Dla redaktorów, pokaż wszystkie obiekty
         obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
         
-        # Apply status filter with default to 'weryfikacja' for editors
+        # Zastosuj filtr statusu z domyślną wartością 'weryfikacja' dla redaktorów
         status_filter = request.GET.get('status', 'weryfikacja' if not request.GET else '')
         if status_filter:
             obiekty = obiekty.filter(status=status_filter)
-        elif not request.GET:  # Default filter only on initial page load
+        elif not request.GET:  # Domyślnie filter only on initial page load
             obiekty = obiekty.filter(status='weryfikacja')
     else:
-        # For regular users, show only their own objects
+        # Dla zwykłych użytkowników, pokaż tylko ich własne obiekty
         obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia')
         
-        # Apply status filter if provided
+        # Zastosuj filtr statusu jeśli podany
         if filter_form.is_valid():
             status = filter_form.cleaned_data.get('status')
             if status:
@@ -296,7 +296,7 @@ def moje_zgloszenia(request):
     
     obiekty = obiekty.order_by('-id')
     
-    # Add pagination - 12 objects per page
+    # Dodaj paginację - 12 obiektów na stronę
     paginator = Paginator(obiekty, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -317,10 +317,10 @@ def edytuj_roboczy(request, obiekt_id):
     """View to edit draft objects (or any objects for editors)"""
     obiekt = get_object_or_404(Obiekt, id=obiekt_id)
     
-    # Check if user is editor
+    # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
     
-    # Create formset for existing photos
+    # Utwórz formset dla istniejących zdjęć
     FotoEditFormSet = inlineformset_factory(
         Obiekt, 
         Foto,
@@ -333,7 +333,7 @@ def edytuj_roboczy(request, obiekt_id):
     )
     
     if request.method == 'POST':
-        # Use appropriate form based on user role
+        # Użyj odpowiedniego formularza na podstawie roli użytkownika
         if is_editor:
             obiekt_form = RedaktorObiektForm(request.POST, instance=obiekt, user=request.user)
         else:
@@ -344,10 +344,10 @@ def edytuj_roboczy(request, obiekt_id):
             obiekt = obiekt_form.save(commit=False)
             
             if is_editor:
-                # For editors, use status from form
+                # Dla redaktorów, użyj statusu z formularza
                 success_message = 'Obiekt został pomyślnie zaktualizowany!'
             else:
-                # For regular users, determine action based on button clicked
+                # Dla zwykłych użytkowników, określ akcję na podstawie klikniętego przycisku
                 if 'zapisz_roboczy' in request.POST:
                     obiekt.status = 'roboczy'
                     success_message = 'Obiekt został zaktualizowany jako roboczy!'
@@ -355,12 +355,12 @@ def edytuj_roboczy(request, obiekt_id):
                     obiekt.status = 'weryfikacja'
                     success_message = 'Obiekt został zaktualizowany i wysłany do weryfikacji!'
                 else:
-                    obiekt.status = 'roboczy'  # Default
+                    obiekt.status = 'roboczy'  # Domyślnie
                     success_message = 'Obiekt został pomyślnie zaktualizowany!'
             
             obiekt.save()
 
-            # Save photos
+            # Zapisz zdjęcia
             foto_formset.save()
 
             messages.success(request, success_message)
@@ -369,7 +369,7 @@ def edytuj_roboczy(request, obiekt_id):
             if not foto_formset.is_valid():
                 messages.error(request, 'Wystąpił błąd podczas zapisywania zdjęć!')
     else:
-        # Use appropriate form based on user role
+        # Użyj odpowiedniego formularza na podstawie roli użytkownika
         if is_editor:
             obiekt_form = RedaktorObiektForm(instance=obiekt, user=request.user)
         else:

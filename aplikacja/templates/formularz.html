@@ -107,17 +107,17 @@
             background: white;
         }
 
-        /* Make text areas even wider */
+        /* Zrób obszary tekstowe jeszcze szersze */
         .form-control[rows] {
             min-width: 400px;
         }
 
-        /* Improve form layout for better field spacing */
+        /* Ulepsz układ formularza dla lepszych odstępów między polami */
         .form-group {
             margin-bottom: 25px;
         }
 
-        /* Make input containers responsive but maintain good width */
+        /* Zrób kontenery input responsywne ale zachowaj dobrą szerokość */
         @media (min-width: 768px) {
             .form-control, .form-select {
                 min-width: 400px;
@@ -495,7 +495,7 @@
 {% block extra_js %}
     <script>
         let formCount = {{ foto_formset.total_form_count }};
-        let deletedForms = new Set(); // Track deleted forms
+        let deletedForms = new Set(); // Śledź usunięte formularze
 
         function addPhoto() {
             if (formCount >= 10) {
@@ -506,9 +506,9 @@
             const formContainer = document.getElementById('foto-forms');
             const newForm = document.createElement('div');
             newForm.className = 'foto-item';
-            newForm.setAttribute('data-form-type', 'new'); // Mark as new form
+            newForm.setAttribute('data-form-type', 'new'); // Oznacz jako nowy formularz
 
-            // Create proper Django formset structure
+            // Utwórz właściwą strukturę formset Django
             const newFormHtml = `
                 <div class="file-input-wrapper">
                     <input type="file"
@@ -537,11 +537,11 @@
             newForm.innerHTML = newFormHtml;
             formContainer.appendChild(newForm);
 
-            // Update form count
+            // Zaktualizuj liczbę formularzy
             formCount++;
             updateTotalForms();
 
-            // Add animation
+            // Dodaj animację
             newForm.style.opacity = '0';
             newForm.style.transform = 'translateY(-20px)';
             setTimeout(() => {
@@ -557,12 +557,12 @@
             const deleteInput = fotoItem.querySelector('input[name$="-DELETE"]');
 
             if (formType === 'existing' && deleteInput) {
-                // For existing forms from Django formset - mark for deletion
+                // Dla istniejących formularzy z formset Django - oznacz do usunięcia
                 if (!deletedForms.has(fotoItem)) {
                     deleteInput.value = 'on';
                     deletedForms.add(fotoItem);
 
-                    // Add visual indication
+                    // Dodaj wizualną wskazówkę
                     fotoItem.classList.add('marked-for-deletion');
 
                     const label = fotoItem.querySelector('.file-input-label');
@@ -572,12 +572,12 @@
                         label.style.color = 'white';
                     }
 
-                    // Update button to show restore option
+                    // Zaktualizuj przycisk aby pokazać opcję przywrócenia
                     button.innerHTML = '<i class="fas fa-undo"></i> Przywróć';
                     button.onclick = function() { restoreFoto(this); };
                 }
             } else {
-                // For newly added forms - remove from DOM
+                // Dla nowo dodanych formularzy - usuń z DOM
                 fotoItem.style.transition = 'all 0.3s ease';
                 fotoItem.style.opacity = '0';
                 fotoItem.style.transform = 'translateX(-100%)';
@@ -599,7 +599,7 @@
                 deleteInput.value = '';
                 deletedForms.delete(fotoItem);
 
-                // Remove visual indication
+                // Usuń wizualną wskazówkę
                 fotoItem.classList.remove('marked-for-deletion');
 
                 const label = fotoItem.querySelector('.file-input-label');
@@ -618,7 +618,7 @@
                     }
                 }
 
-                // Restore delete button
+                // Przywróć przycisk usuwania
                 button.innerHTML = '<i class="fas fa-trash"></i> Usuń';
                 button.onclick = function() { deleteFoto(this); };
             }
@@ -666,18 +666,18 @@
             });
         }
 
-        // Add file name display functionality
+        // Dodaj funkcjonalność wyświetlania nazwy pliku
         document.addEventListener('change', function(e) {
             if (e.target.type === 'file') {
                 const fotoItem = e.target.closest('.foto-item');
 
-                // Skip if form is marked for deletion
+                // Pomiń jeśli formularz jest oznaczony do usunięcia
                 if (fotoItem && fotoItem.classList.contains('marked-for-deletion')) {
                     return;
                 }
 
                 const label = e.target.nextElementSibling;
-                // Skip hidden inputs
+                // Pomiń ukryte elementy input
                 let labelElement = label;
                 while (labelElement && !labelElement.classList.contains('file-input-label')) {
                     labelElement = labelElement.nextElementSibling;
@@ -685,7 +685,7 @@
 
                 if (labelElement && e.target.files.length > 0) {
                     const fileName = e.target.files[0].name;
-                    // Truncate long filenames
+                    // Obetnij długie nazwy plików
                     const displayName = fileName.length > 20 ? fileName.substring(0, 20) + '...' : fileName;
                     labelElement.innerHTML = `<i class="fas fa-check-circle"></i> ${displayName}`;
                     labelElement.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
@@ -698,7 +698,7 @@
             }
         });
 
-        // Initialize existing file inputs on page load
+        // Zainicjalizuj istniejące elementy input plików przy ładowaniu strony
         document.addEventListener('DOMContentLoaded', function() {
             const fileInputs = document.querySelectorAll('input[type="file"]');
             fileInputs.forEach(function(input) {
