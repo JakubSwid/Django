@@ -360,8 +360,15 @@ def edytuj_roboczy(request, obiekt_id):
             
             obiekt.save()
 
-            # Zapisz zdjęcia
-            foto_formset.save()
+            # Zapisz zdjęcia z kompresją
+            fotos = foto_formset.save(commit=False)
+            for foto in fotos:
+                foto.obiekt = obiekt
+                # Zapisz zarówno oryginalne jak i skompresowane wersje
+                if foto.plik:  # Jeśli jest przesłany plik
+                    save_foto_with_compression(foto, foto.plik)
+                else:
+                    foto.save()
 
             messages.success(request, success_message)
             return redirect('moje_zgloszenia')
