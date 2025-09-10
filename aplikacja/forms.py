@@ -9,7 +9,7 @@ class ObiektForm(forms.ModelForm):
     class Meta:
         model = Obiekt
         fields = '__all__'
-        exclude = ['user', 'status']  # Usuń status z formularza, ponieważ będzie ustawiony przez akcję przycisku
+        exclude = ['user', 'status']
         widgets = {
             'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski', 'class': 'form-control'}),
@@ -67,7 +67,7 @@ class RedaktorObiektForm(forms.ModelForm):
     class Meta:
         model = Obiekt
         fields = '__all__'
-        exclude = ['user']  # Wyklucz tylko użytkownika, uwzględnij status dla redaktorów
+        exclude = ['user']
         widgets = {
             'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski', 'class': 'form-control'}),
@@ -132,7 +132,7 @@ FotoFormSet = inlineformset_factory(
     Obiekt, Foto,
     form=FotoForm,
     extra=0,
-    min_num=1,  # Wymagaj co najmniej 1 zdjęcia
+    min_num=1,
     validate_min=True,
     max_num=10,
 
@@ -147,13 +147,12 @@ class ObiektFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Użyj pojedynczego zapytania aby pobrać wszystkie unikalne wartości jednocześnie - bardziej wydajne
+
         distinct_values = Obiekt.objects.filter(status='opublikowany').values_list(
             'wojewodztwo', 'powiat', 'lokalizacja', 'typ_obiektu'
         ).distinct()
         
-        # Zbierz unikalne wartości dla każdego pola
-        wojewodztwa = set()
+        # Zbierz unikalne wartości dla każdego pola     wojewodztwa = set()
         powiaty = set()
         lokalizacje = set()
         typy_obiektow = set()
@@ -168,7 +167,7 @@ class ObiektFilterForm(forms.Form):
             if typ_obiektu:
                 typy_obiektow.add(typ_obiektu)
 
-        # Posortuj i utwórz opcje wyboru
+
         self.fields['wojewodztwo'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(wojewodztwa)]
         self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(powiaty)]
         self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(lokalizacje)]
@@ -214,12 +213,12 @@ class CustomUserCreationForm(forms.Form):
             if User.objects.filter(username__iexact=username).exists():
                 raise forms.ValidationError('Użytkownik o tej nazwie już istnieje.')
             
-            # Pozwól na spacje, litery, cyfry i niektóre znaki specjalne
+
             import re
             if not re.match(r'^[a-zA-Z0-9\s@.+_-]+$', username):
                 raise forms.ValidationError('Nazwa użytkownika może zawierać tylko litery, cyfry, spacje oraz znaki @.+_-')
                 
-            # Nazwa użytkownika nie powinna składać się tylko ze spacji
+
             if username.strip() == '':
                 raise forms.ValidationError('Nazwa użytkownika nie może składać się tylko ze spacji.')
                 

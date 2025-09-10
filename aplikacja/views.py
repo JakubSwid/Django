@@ -314,13 +314,13 @@ def moje_zgloszenia(request):
 
 @redaktor_or_own_draft_required
 def edytuj_roboczy(request, obiekt_id):
-    """View to edit draft objects (or any objects for editors)"""
+
     obiekt = get_object_or_404(Obiekt, id=obiekt_id)
     
     # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
     
-    # Utwórz formset dla istniejących zdjęć
+
     FotoEditFormSet = inlineformset_factory(
         Obiekt, 
         Foto,
@@ -344,10 +344,10 @@ def edytuj_roboczy(request, obiekt_id):
             obiekt = obiekt_form.save(commit=False)
             
             if is_editor:
-                # Dla redaktorów, użyj statusu z formularza
+
                 success_message = 'Obiekt został pomyślnie zaktualizowany!'
             else:
-                # Dla zwykłych użytkowników, określ akcję na podstawie klikniętego przycisku
+
                 if 'zapisz_roboczy' in request.POST:
                     obiekt.status = 'roboczy'
                     success_message = 'Obiekt został zaktualizowany jako roboczy!'
