@@ -152,7 +152,8 @@ class ObiektFilterForm(forms.Form):
             'wojewodztwo', 'powiat', 'lokalizacja', 'typ_obiektu'
         ).distinct()
         
-        # Zbierz unikalne wartości dla każdego pola     wojewodztwa = set()
+        # Zbierz unikalne wartości dla każdego pola
+        wojewodztwa = set()
         powiaty = set()
         lokalizacje = set()
         typy_obiektow = set()
