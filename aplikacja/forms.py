@@ -9,7 +9,7 @@ class ObiektForm(forms.ModelForm):
     class Meta:
         model = Obiekt
         fields = '__all__'
-        exclude = ['user', 'status']  # Remove status from form as it will be set by button action
+        exclude = ['user', 'status']
         widgets = {
             'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski', 'class': 'form-control'}),
@@ -49,25 +49,25 @@ class ObiektForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        # Auto-fill date and author only for new objects (when instance is not provided or no pk)
+        # Automatyczne wypełnienie daty i autora tylko dla nowych obiektów (gdy instancja nie jest podana lub nie ma pk)
         if not self.instance.pk and user:
             from django.utils import timezone
             
-            # Set current date for data_wpisu if not already set
+            # Ustaw bieżącą datę dla data_wpisu jeśli nie jest już ustawiona
             if not self.initial.get('data_wpisu'):
                 self.initial['data_wpisu'] = timezone.now().date()
                 
-            # Set current user as author if not already set
+            # Ustaw bieżącego użytkownika jako autora jeśli nie jest już ustawiony
             if not self.initial.get('autorzy_wpisu'):
                 self.initial['autorzy_wpisu'] = user.username
 
 
 class RedaktorObiektForm(forms.ModelForm):
-    """Form for editors that includes status field"""
+    """Formularz dla redaktorów zawierający pole statusu"""
     class Meta:
         model = Obiekt
         fields = '__all__'
-        exclude = ['user']  # Only exclude user, include status for editors
+        exclude = ['user']
         widgets = {
             'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski', 'class': 'form-control'}),
@@ -107,15 +107,15 @@ class RedaktorObiektForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        # Auto-fill date and author only for new objects (when instance is not provided or no pk)
+        # Automatyczne wypełnienie daty i autora tylko dla nowych obiektów (gdy instancja nie jest podana lub nie ma pk)
         if not self.instance.pk and user:
             from django.utils import timezone
             
-            # Set current date for data_wpisu if not already set
+            # Ustaw bieżącą datę dla data_wpisu jeśli nie jest już ustawiona
             if not self.initial.get('data_wpisu'):
                 self.initial['data_wpisu'] = timezone.now().date()
                 
-            # Set current user as author if not already set
+            # Ustaw bieżącego użytkownika jako autora jeśli nie jest już ustawiony
             if not self.initial.get('autorzy_wpisu'):
                 self.initial['autorzy_wpisu'] = user.username
 
@@ -132,7 +132,7 @@ FotoFormSet = inlineformset_factory(
     Obiekt, Foto,
     form=FotoForm,
     extra=0,
-    min_num=1,  # Require at least 1 photo
+    min_num=1,
     validate_min=True,
     max_num=10,
 
@@ -147,13 +147,12 @@ class ObiektFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Use a single query to get all distinct values at once - more efficient
+
         distinct_values = Obiekt.objects.filter(status='opublikowany').values_list(
             'wojewodztwo', 'powiat', 'lokalizacja', 'typ_obiektu'
         ).distinct()
         
-        # Collect unique values for each field
-        wojewodztwa = set()
+        # Zbierz unikalne wartości dla każdego pola     wojewodztwa = set()
         powiaty = set()
         lokalizacje = set()
         typy_obiektow = set()
@@ -168,7 +167,7 @@ class ObiektFilterForm(forms.Form):
             if typ_obiektu:
                 typy_obiektow.add(typ_obiektu)
 
-        # Sort and create choices
+
         self.fields['wojewodztwo'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(wojewodztwa)]
         self.fields['powiat'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(powiaty)]
         self.fields['lokalizacja'].choices = [('', 'Wszystkie')] + [(v, v) for v in sorted(lokalizacje)]
@@ -210,16 +209,16 @@ class CustomUserCreationForm(forms.Form):
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if username:
-            # Check if username already exists (case insensitive)
+            # Sprawdź czy nazwa użytkownika już istnieje (bez rozróżniania wielkości liter)
             if User.objects.filter(username__iexact=username).exists():
                 raise forms.ValidationError('Użytkownik o tej nazwie już istnieje.')
             
-            # Allow spaces, letters, numbers and some special characters
+
             import re
             if not re.match(r'^[a-zA-Z0-9\s@.+_-]+$', username):
                 raise forms.ValidationError('Nazwa użytkownika może zawierać tylko litery, cyfry, spacje oraz znaki @.+_-')
                 
-            # Username should not be only spaces
+
             if username.strip() == '':
                 raise forms.ValidationError('Nazwa użytkownika nie może składać się tylko ze spacji.')
                 
@@ -251,7 +250,7 @@ class CustomUserCreationForm(forms.Form):
 
 
 class StatusFilterForm(forms.Form):
-    """Form for filtering objects by status"""
+    """Formularz do filtrowania obiektów według statusu"""
     status = forms.ChoiceField(
         choices=[('', 'Wszystkie')] + Obiekt.STATUSY,
         required=False,

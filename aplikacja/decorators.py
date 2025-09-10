@@ -6,7 +6,7 @@ from .models import Obiekt
 
 
 def redaktor_required(view_func):
-    """Decorator to require user to be in Redaktor group"""
+    """Dekorator wymagający aby użytkownik był w grupie Redaktor"""
     @wraps(view_func)
     @login_required
     def wrapper(request, *args, **kwargs):
@@ -23,14 +23,14 @@ def redaktor_or_own_draft_required(view_func):
     def wrapper(request, obiekt_id, *args, **kwargs):
         obiekt = get_object_or_404(Obiekt, id=obiekt_id)
         
-        # Check if user is editor
+        # Sprawdź czy użytkownik jest redaktorem
         is_editor = request.user.groups.filter(name='Redaktor').exists()
         
         if is_editor:
-            # Editors can edit any object
+            # Redaktorzy mogą edytować dowolny obiekt
             return view_func(request, obiekt_id, *args, **kwargs)
         else:
-            # Regular users can only edit their own draft objects
+            # Zwykli użytkownicy mogą edytować tylko swoje robocze obiekty
             if obiekt.user != request.user:
                 raise PermissionDenied("Możesz edytować tylko swoje zgłoszenia.")
             
