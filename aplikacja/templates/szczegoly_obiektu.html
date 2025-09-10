@@ -344,12 +344,12 @@
                 </div>
             </div>
             {% endif %}
-
+            {% if obiekt.powiat %}
             <div class="pole">
                 <span class="field-label"><i class="fas fa-map"></i>Powiat:</span>
                 <span class="field-value">{{ obiekt.powiat }}</span>
             </div>
-
+            {% endif %}
             <div class="pole">
                 <span class="field-label"><i class="fas fa-calendar"></i>Data wpisu:</span>
                 <span class="field-value">{{ obiekt.data_wpisu }}</span>
