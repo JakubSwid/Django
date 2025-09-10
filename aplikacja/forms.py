@@ -69,7 +69,7 @@ class RedaktorObiektForm(forms.ModelForm):
         fields = '__all__'
         exclude = ['user']
         widgets = {
-            'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control'}),
+            'nazwa_geograficzna_polska': forms.TextInput(attrs={'placeholder': 'Np. Kraków', 'class': 'form-control','font-weight':'bold'}),
             'powiat': forms.TextInput(attrs={'placeholder': 'Np. żarski', 'class': 'form-control'}),
             'typ_obiektu': forms.TextInput(attrs={'placeholder': 'Np. płyta epitafijna', 'class': 'form-control'}),
             'polozenie_szerokosc': forms.NumberInput(attrs={'placeholder': 'Np. 50.0547', 'step': 'any', 'class': 'form-control'}),
@@ -106,15 +106,15 @@ class RedaktorObiektForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
+
         # Automatyczne wypełnienie daty i autora tylko dla nowych obiektów (gdy instancja nie jest podana lub nie ma pk)
         if not self.instance.pk and user:
             from django.utils import timezone
-            
+
             # Ustaw bieżącą datę dla data_wpisu jeśli nie jest już ustawiona
             if not self.initial.get('data_wpisu'):
                 self.initial['data_wpisu'] = timezone.now().date()
-                
+
             # Ustaw bieżącego użytkownika jako autora jeśli nie jest już ustawiony
             if not self.initial.get('autorzy_wpisu'):
                 self.initial['autorzy_wpisu'] = user.username

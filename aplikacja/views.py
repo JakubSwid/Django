@@ -267,7 +267,7 @@ def logout_view(request):
 
 @login_required
 def moje_zgloszenia(request):
-    """View to display user's own objects or all objects for editors"""
+
     # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
     

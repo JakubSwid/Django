@@ -85,6 +85,12 @@
             width: 16px;
         }
 
+        /* Klasa dla specjalnie pogrubionych labeli */
+        .bold-label {
+            font-weight: bold !important;
+            color: var(--dark-brown) !important;
+        }
+
         .form-control, .form-select {
             border: 2px solid var(--light-brown);
             border-radius: 8px;
@@ -122,7 +128,7 @@
             .form-control, .form-select {
                 min-width: 400px;
             }
-            
+
             .form-control[rows] {
                 min-width: 500px;
             }
@@ -401,11 +407,16 @@
                         <h3><i class="fas fa-info-circle"></i> Informacje Podstawowe</h3>
                     </div>
                     {% if is_editor %}
-                        <!-- For editors, display form fields individually to handle status separately -->
                         {% for field in obiekt_form %}
                             {% if field.name != 'status' %}
                                 <div class="mb-3">
-                                    {{ field.label_tag }}
+                                    {% if field.name == 'nazwa_geograficzna_polska' or field.name == 'typ_obiektu' %}
+                                        <label for="{{ field.id_for_label }}" class="form-label bold-label">
+                                            {{ field.label }}
+                                        </label>
+                                    {% else %}
+                                        {{ field.label_tag }}
+                                    {% endif %}
                                     {{ field }}
                                     {% if field.help_text %}
                                         <div class="form-text">{{ field.help_text }}</div>
@@ -417,7 +428,7 @@
                             {% endif %}
                         {% endfor %}
                         
-                        <!-- Status field for editors -->
+
                         <div class="form-section">
                             <div class="section-header">
                                 <h3><i class="fas fa-flag"></i> Status Obiektu</h3>
@@ -434,7 +445,6 @@
                             </div>
                         </div>
                     {% else %}
-                        <!-- For regular users, display form normally (status is excluded) -->
                         {{ obiekt_form }}
                     {% endif %}
                 </div>
@@ -478,12 +488,12 @@
                         <i class="fas fa-times"></i> Anuluj
                     </a>
                     {% if is_editor %}
-                        <!-- For editors, show only save button -->
+                        <!-- Dla edytorów -->
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-save"></i> Zapisz
                         </button>
                     {% else %}
-                        <!-- For regular users, show both buttons -->
+                        <!-- Dla użytkowników -->
                         <button type="submit" name="zapisz_roboczy" class="btn btn-secondary btn-lg">
                             <i class="fas fa-save"></i> Zapisz jako Roboczy
                         </button>
