@@ -267,50 +267,66 @@ def logout_view(request):
 
 @login_required
 def moje_zgloszenia(request):
-
     # Sprawdź czy użytkownik jest redaktorem
     is_editor = request.user.groups.filter(name='Redaktor').exists()
-    
-    # Zainicjalizuj formularz filtra
-    filter_form = StatusFilterForm(request.GET or None)
-    
+
+    # Zainicjalizuj formularz filtra z domyślną wartością dla redaktorów
+    initial_data = {}
+    if is_editor and not request.GET:
+        initial_data = {'status': 'weryfikacja'}
+
+    filter_form = StatusFilterForm(request.GET or initial_data)
+
     if is_editor:
         # Dla redaktorów, pokaż wszystkie obiekty
         obiekty = Obiekt.objects.all().prefetch_related('zdjecia')
-        
-        # Zastosuj filtr statusu z domyślną wartością 'weryfikacja' dla redaktorów
-        status_filter = request.GET.get('status', 'weryfikacja' if not request.GET else '')
-        if status_filter:
-            obiekty = obiekty.filter(status=status_filter)
-        elif not request.GET:  # Domyślnie filter only on initial page load
+
+        # Zastosuj filtr statusu
+        if filter_form.is_valid():
+            status = filter_form.cleaned_data.get('status')
+            if status:
+                obiekty = obiekty.filter(status=status)
+            elif not request.GET:  # Domyślnie weryfikacja przy pierwszym ładowaniu
+                obiekty = obiekty.filter(status='weryfikacja')
+        elif not request.GET:  # Domyślnie weryfikacja przy pierwszym ładowaniu
             obiekty = obiekty.filter(status='weryfikacja')
     else:
         # Dla zwykłych użytkowników, pokaż tylko ich własne obiekty
         obiekty = Obiekt.objects.filter(user=request.user).prefetch_related('zdjecia')
-        
+
         # Zastosuj filtr statusu jeśli podany
         if filter_form.is_valid():
             status = filter_form.cleaned_data.get('status')
             if status:
                 obiekty = obiekty.filter(status=status)
-    
+
+    # Zapisz całkowitą liczbę przed paginacją
+    total_count = obiekty.count()
+
     obiekty = obiekty.order_by('-id')
-    
+
     # Dodaj paginację - 12 obiektów na stronę
     paginator = Paginator(obiekty, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    # Pobierz aktualny status dla wyświetlania
+    current_status = None
+    if filter_form.is_valid():
+        current_status = filter_form.cleaned_data.get('status')
+    elif is_editor and not request.GET:
+        current_status = 'weryfikacja'
+
     context = {
         'obiekty': page_obj,
         'user': request.user,
         'is_editor': is_editor,
         'filter_form': filter_form,
-        'current_status': request.GET.get('status', 'weryfikacja' if is_editor and not request.GET else ''),
+        'current_status': current_status,
+        'total_count': total_count,
         'page_obj': page_obj
     }
     return render(request, 'moje_zgloszenia.html', context)
-
 
 @redaktor_or_own_draft_required
 def edytuj_roboczy(request, obiekt_id):

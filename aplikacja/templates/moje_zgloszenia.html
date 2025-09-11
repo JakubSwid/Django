@@ -274,18 +274,18 @@
     {% endif %}
 
     {% if obiekty %}
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    {% if is_editor %}
-                        Wyświetlanych jest <strong>{{ obiekty.count }}</strong> zgłoszenie{{ obiekty.count|pluralize:"nie,nia,ń" }}{% if current_status %} ze statusem <strong>{{ obiekty.first.get_status_display }}</strong>{% endif %}.
-                    {% else %}
-                        Masz łącznie <strong>{{ obiekty.count }}</strong> zgłoszenie{{ obiekty.count|pluralize:"nie,nia,ń" }}.
-                    {% endif %}
-                </div>
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                {% if is_editor %}
+                    Wyświetlanych jest <strong>{{ total_count }}</strong> zgłoszenie{{ total_count|pluralize:"nie,ń" }}{% if current_status %} ze statusem <strong>{{ current_status }}</strong>{% endif %}
+                {% else %}
+                    Masz łącznie <strong>{{ total_count }}</strong> zgłoszenie{{ total_count|pluralize:"nie,ń" }}.
+                {% endif %}
             </div>
         </div>
+    </div>
 
         <div class="row g-4">
             {% for obiekt in obiekty %}
