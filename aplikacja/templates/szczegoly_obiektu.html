@@ -565,7 +565,7 @@
         </div>
         {% endif %}
 
-        <!-- Edit button for editors or object owners -->
+        <!-- Przycisk do edycji (jeśli możesz edytwać) -->
         {% if user|can_edit_obiekt:obiekt %}
             <div class="text-center mb-3">
                 <a href="{% url 'edytuj_roboczy' obiekt.id %}" class="btn btn-edit">
