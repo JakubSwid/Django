@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 
 
+
 class Obiekt(models.Model):
     polozenie_szerokosc = models.FloatField(validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],null=True,blank=True)
     polozenie_dlugosc = models.FloatField(validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)],null=True,blank=True)
@@ -90,5 +91,7 @@ class Foto(models.Model):
     class Meta:
         verbose_name = "Zdjęcie"
         verbose_name_plural = "Zdjęcia"
+
+
 
 

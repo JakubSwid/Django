@@ -236,10 +236,9 @@ def login_view(request):
     
     return render(request, 'auth/login.html', {'form': form})
 
-
+@redaktor_required
 def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('wyszukaj')
+
     
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
