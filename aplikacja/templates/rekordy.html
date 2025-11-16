@@ -330,23 +330,11 @@
                             <div class="card-header">
                                 <h2>
                                     <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
-                                        {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}
+                                        {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }} - {{ obiekt.data_powstania_obiektu|default:"Brak daty" }}
                                     </a>
                                 </h2>
                             </div>
                             <div class="card-body">
-                                <div class="info-item">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span class="info-label">Położenie:</span>
-                                    <span class="info-value">{{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}</span>
-                                </div>
-
-                                <div class="info-item">
-                                    <i class="fas fa-map"></i>
-                                    <span class="info-label">Powiat:</span>
-                                    <span class="info-value">{{ obiekt.powiat }}</span>
-                                </div>
-
                                 <div class="info-item">
                                     <i class="fas fa-flag"></i>
                                     <span class="info-label">Województwo:</span>
@@ -354,28 +342,26 @@
                                 </div>
 
                                 <div class="info-item">
+                                    <i class="fas fa-map"></i>
+                                    <span class="info-label">Powiat:</span>
+                                    <span class="info-value">{{ obiekt.powiat|default:"Brak" }}</span>
+                                </div>
+
+
+                                <div class="info-item">
                                     <i class="fas fa-location-dot"></i>
                                     <span class="info-label">Lokalizacja:</span>
                                     <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
                                 </div>
 
-                                <div class="info-item">
-                                    <i class="fas fa-cube"></i>
-                                    <span class="info-label">Materiał:</span>
-                                    <span class="info-value">{{ obiekt.material|default:"Brak" }}</span>
-                                </div>
+
 
                                 <div class="info-item">
-                                    <i class="fas fa-ruler-combined"></i>
-                                    <span class="info-label">Wymiary:</span>
-                                    <span class="info-value">{{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m</span>
+                                    <i class="fas fa-user"></i>
+                                    <span class="info-label">Osoba upamiętniona:</span>
+                                    <span class="info-value">{{ obiekt.imie_nazwisko_osoby_upamietnionej|default:"Brak" }}</span>
                                 </div>
 
-                                <div class="info-item">
-                                    <i class="fas fa-align-left"></i>
-                                    <span class="info-label">Opis:</span>
-                                    <span class="info-value">{{ obiekt.opis|truncatewords:20|default:"Brak" }}</span>
-                                </div>
 
                                 <div class="info-item">
                                     <i class="fas fa-calendar"></i>
@@ -389,6 +375,7 @@
                                 </div>
 
                                 {% if obiekt.zdjecia.all %}
+                                <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
                                     <div class="zdjecia-container">
                                         <div class="d-flex flex-wrap gap-2">
                                             {% for zdjecie in obiekt.zdjecia.all %}
@@ -396,13 +383,14 @@
                                             {% endfor %}
                                         </div>
                                     </div>
+                                </a>
                                 {% else %}
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-exclamation-circle"></i> Brak zdjęć
                                     </p>
                                 {% endif %}
                                 
-                                <!-- Edit button for editors -->
+                                <!-- Przycisk edycji -->
                                 {% if user|can_edit_obiekt:obiekt %}
                                     <div class="mt-3 text-center">
                                         <a href="{% url 'edytuj_roboczy' obiekt.id %}" class="btn btn-sm btn-edit">

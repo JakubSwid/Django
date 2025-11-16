@@ -273,7 +273,11 @@ def import_objects_from_csv(file_path, photos_base_dir=None):
                         'data_korekty_2': data_korekty_2,
                         'imie_nazwisko_osoby_upamietnionej': row.get('imie_nazwisko_osoby_upamietnionej', ''),
                         'skan_3d': row.get('skan_3d', ''),
-                        'status': row.get('status', 'opublikowany')
+                        'uwagi': row.get('uwagi', ''),
+                        'status': row.get('status', 'opublikowany'),
+                        'data_powstania_obiektu' : row.get('data_powstania_obiektu', ''),
+                        'tom' : row.get('tom', ''),
+                        'strona' : row.get('strona', ''),
                     }
 
                     obiekt = Obiekt(**obiekt_data)

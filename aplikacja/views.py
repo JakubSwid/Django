@@ -61,12 +61,12 @@ def wyszukaj(request):
     wojewodztwo = request.GET.get('wojewodztwo', '')
     powiat = request.GET.get('powiat', '')
     typ_obiektu = request.GET.get('typ_obiektu', '')
-    material = request.GET.get('material', '')
+    imie_nazwisko_osoby_upamietnionej = request.GET.get('imie_nazwisko_osoby_upamietnionej', '')
 
-    if not any([query, wojewodztwo, powiat, typ_obiektu, material]):
+    if not any([query, wojewodztwo, powiat, typ_obiektu, imie_nazwisko_osoby_upamietnionej]):
         obiekty = Obiekt.objects.none()
     else:
-        # Zacznij tylko od opublikowanych obiektów i pobierz z góry zdjęcia
+
         obiekty = Obiekt.objects.filter(status='opublikowany').prefetch_related('zdjecia')
 
     # Wyszukiwanie rozmyte używając obiektów Q dla ogólnego zapytania
@@ -84,8 +84,8 @@ def wyszukaj(request):
         obiekty = obiekty.filter(powiat__icontains=powiat)
     if typ_obiektu:
         obiekty = obiekty.filter(typ_obiektu__icontains=typ_obiektu)
-    if material:
-        obiekty = obiekty.filter(material__icontains=material)
+    if imie_nazwisko_osoby_upamietnionej:
+        obiekty = obiekty.filter(imie_nazwisko_osoby_upamietnionej__icontains=imie_nazwisko_osoby_upamietnionej)
 
     # Dodaj paginację - 12 obiektów na stronę
     paginator = Paginator(obiekty, 12)

@@ -279,7 +279,7 @@
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
                 {% if is_editor %}
-                    Wyświetlanych jest <strong>{{ total_count }}</strong> zgłoszenie{{ total_count|pluralize:"nie,ń" }}{% if current_status %} ze statusem <strong>{{ current_status }}</strong>{% endif %}
+                    Wyświetlanych jest <strong>{{ total_count }}</strong> zgłosze{{ total_count|pluralize:"nie,ń" }}{% if current_status %} ze statusem <strong>{{ current_status }}</strong>{% endif %}
                 {% else %}
                     Masz łącznie <strong>{{ total_count }}</strong> zgłoszenie{{ total_count|pluralize:"nie,ń" }}.
                 {% endif %}
@@ -294,48 +294,44 @@
                         <div class="card-header">
                             <h2>
                                 <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
-                                    {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }}
+                                    {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }} - {{ obiekt.data_powstania_obiektu|default:"Brak daty" }}
                                 </a>
                             </h2>
                         </div>
                         <div class="card-body">
-                            <div class="info-item">
-                                <i class="fas fa-tag"></i>
-                                <span class="info-label">Status:</span>
-                                <span class="status-badge status-{{ obiekt.status }}">
-                                    {{ obiekt.get_status_display }}
-                                </span>
-                            </div>
+                                <div class="info-item">
+                                    <i class="fas fa-flag"></i>
+                                    <span class="info-label">Województwo:</span>
+                                    <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
+                                </div>
 
-                            <div class="info-item">
-                                <i class="fas fa-calendar"></i>
-                                <span class="info-label">Data utworzenia:</span>
-                                <span class="info-value">{{ obiekt.data_wpisu|default:"Brak daty" }}</span>
-                            </div>
+                                <div class="info-item">
+                                    <i class="fas fa-map"></i>
+                                    <span class="info-label">Powiat:</span>
+                                    <span class="info-value">{{ obiekt.powiat|default:"Brak" }}</span>
+                                </div>
 
-                            <div class="info-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span class="info-label">Położenie:</span>
-                                <span class="info-value">
-                                    {% if obiekt.polozenie_szerokosc and obiekt.polozenie_dlugosc %}
-                                        {{ obiekt.polozenie_szerokosc|floatformat:6 }}, {{ obiekt.polozenie_dlugosc|floatformat:6 }}
-                                    {% else %}
-                                        Brak współrzędnych
-                                    {% endif %}
-                                </span>
-                            </div>
 
-                            <div class="info-item">
-                                <i class="fas fa-map"></i>
-                                <span class="info-label">Powiat:</span>
-                                <span class="info-value">{{ obiekt.powiat|default:"Brak" }}</span>
-                            </div>
+                                <div class="info-item">
+                                    <i class="fas fa-location-dot"></i>
+                                    <span class="info-label">Lokalizacja:</span>
+                                    <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
+                                </div>
 
-                            <div class="info-item">
-                                <i class="fas fa-flag"></i>
-                                <span class="info-label">Województwo:</span>
-                                <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
-                            </div>
+
+
+                                <div class="info-item">
+                                    <i class="fas fa-user"></i>
+                                    <span class="info-label">Osoba upamiętniona:</span>
+                                    <span class="info-value">{{ obiekt.imie_nazwisko_osoby_upamietnionej|default:"Brak" }}</span>
+                                </div>
+
+
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span class="info-label">Data wpisu:</span>
+                                    <span class="info-value">{{ obiekt.data_wpisu }}</span>
+                                </div>
 
                             <div class="info-item">
                                 <i class="fas fa-images"></i>

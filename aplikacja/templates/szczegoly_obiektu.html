@@ -423,6 +423,9 @@
                 <span class="field-label"><i class="fas fa-file-alt"></i>Strona:</span>
                 <span class="field-value">{{ obiekt.strona }}</span>
             </div>
+
+
+
             {% endif %}
 
 <!--            {% if obiekt.status %}-->
@@ -544,6 +547,12 @@
             </div>
             {% endif %}
         </div>
+            {% if obiekt.uwagi %}
+                <div class="pole">
+                    <span class="field-label"><i class="fas fa-info-circle"></i>Uwagi:</span>
+                    <span class="field-value">{{ obiekt.uwagi }}</span>
+                </div>
+            {% endif %}
 
         {% if zdjecia %}
         <div class="photos-section">

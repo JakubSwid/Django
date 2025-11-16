@@ -39,6 +39,7 @@ class Obiekt(models.Model):
     data_korekty_2 = models.DateField(blank=True, null=True)
     imie_nazwisko_osoby_upamietnionej = models.CharField(max_length=255, blank=True,null=True)
     skan_3d = models.URLField(max_length=500, blank=True,null=True)
+    uwagi = models.TextField(max_length=500, blank=True,null=True)
 
     STATUSY = [
         ('roboczy', 'Roboczy'),

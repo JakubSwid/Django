@@ -42,7 +42,7 @@ class ObiektForm(forms.ModelForm):
             'data_korekty_2': forms.DateInput(attrs={'type': 'date', 'placeholder': 'RRRR-MM-DD', 'class': 'form-control'}),
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski', 'class': 'form-control'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan', 'class': 'form-control'}),
-
+            'uwagi': forms.TextInput(attrs={'placeholder': 'Uwagi dotyczące obiektu', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -101,6 +101,7 @@ class RedaktorObiektForm(forms.ModelForm):
             'imie_nazwisko_osoby_upamietnionej': forms.TextInput(attrs={'placeholder': 'Np. Jan III Sobieski', 'class': 'form-control'}),
             'skan_3d': forms.URLInput(attrs={'placeholder': 'Np. https://example.com/skan', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
+            'uwagi': forms.TextInput(attrs={'placeholder': 'Uwagi dotyczące obiektu', 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):

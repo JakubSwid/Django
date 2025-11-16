@@ -495,16 +495,16 @@
 
                         <div class="col-md-6">
                             <div class="search-field">
-                                <label for="material">
-                                    <i class="fas fa-cube"></i>
-                                    Materiał:
+                                <label for="imie_nazwisko_osoby_upamietnionej">
+                                    <i class="fas fa-user"></i>
+                                   Osoba upamiętniona:
                                 </label>
                                 <input type="text"
-                                       id="material"
-                                       name="material"
+                                       id="imie_nazwisko_osoby_upamietnionej"
+                                       name="imie_nazwisko_osoby_upamietnionej"
                                        class="form-control"
-                                       value="{{ request.GET.material|default:'' }}"
-                                       placeholder="Np. Kamień">
+                                       value="{{ request.GET.imie_nazwisko_osoby_upamietnionej|default:'' }}"
+                                       placeholder="Np. Jan Kowalski">
                             </div>
                         </div>
                     </div>
@@ -536,78 +536,51 @@
                     <div class="object-card">
                         <h3>
                             <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
-                                {{ obiekt.nazwa_geograficzna_polska }}
-                            </a> - {{ obiekt.typ_obiektu }}
-                        </h3>
+                                 {{ obiekt.nazwa_geograficzna_polska }} - {{ obiekt.typ_obiektu }} - {{ obiekt.data_powstania_obiektu|default:"Brak daty" }}
+                                    </a>
+                                </h2>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-map-marker-alt"></i>
-                                Położenie (szerokość, długość):
-                            </span>
-                            <span class="info-value">
-                                {{ obiekt.polozenie_szerokosc|floatformat:6|default:"Brak" }},
-                                {{ obiekt.polozenie_dlugosc|floatformat:6|default:"Brak" }}
-                            </span>
-                        </div>
+                            <div class="info-row">
+                                <span class="info-label">
+                                    <i class="fas fa-flag"></i>
+                                    Województwo:</span>
+                                    <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
+                                </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-map"></i>
-                                Powiat:
-                            </span>
-                            <span class="info-value">{{ obiekt.powiat|default:"Brak" }}</span>
-                        </div>
+                                <div class="info-row">
+                                    <span class="info-label">
+                                    <i class="fas fa-map"></i>
+                                    Powiat:</span>
+                                    <span class="info-value">{{ obiekt.powiat|default:"Brak" }}</span>
+                                </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-flag"></i>
-                                Województwo:
-                            </span>
-                            <span class="info-value">{{ obiekt.wojewodztwo|default:"Brak" }}</span>
-                        </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-location-dot"></i>
-                                Lokalizacja:
-                            </span>
-                            <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
-                        </div>
+                                <div class="info-row">
+                                    <span class="info-label">
+                                    <i class="fas fa-location-dot"></i>
+                                    Lokalizacja:</span>
+                                    <span class="info-value">{{ obiekt.lokalizacja|default:"Brak" }}</span>
+                                </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-cube"></i>
-                                Materiał:
-                            </span>
-                            <span class="info-value">{{ obiekt.material|default:"Brak" }}</span>
-                        </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-ruler-combined"></i>
-                                Wymiary (wys. x szer.):
-                            </span>
-                            <span class="info-value">
-                                {{ obiekt.wysokosc|default:"Brak" }} x {{ obiekt.szerokosc|default:"Brak" }} m
-                            </span>
-                        </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-align-left"></i>
-                                Opis:
-                            </span>
-                            <span class="info-value">{{ obiekt.opis|truncatewords:20|default:"Brak" }}</span>
-                        </div>
+                                <div class="info-row">
+                                    <span class="info-label">
+                                    <i class="fas fa-user"></i>
+                                   Osoba upamiętniona:</span>
+                                    <span class="info-value">{{ obiekt.imie_nazwisko_osoby_upamietnionej|default:"Brak" }}</span>
+                                </div>
 
-                        <div class="info-row">
-                            <span class="info-label">
-                                <i class="fas fa-calendar"></i>
-                                Data wpisu:
-                            </span>
-                            <span class="info-value">{{ obiekt.data_wpisu|default:"Brak" }}</span>
-                        </div>
+
+                                <div class="info-row">
+                                    <span class="info-label">
+                                    <i class="fas fa-calendar"></i>
+                                    Data wpisu:</span>
+                                    <span class="info-value">{{ obiekt.data_wpisu }}</span>
+                                </div>
+
+
+
 
                         <div class="info-row">
                             <span class="info-label">
@@ -629,7 +602,8 @@
                                 <i class="fas fa-exclamation-circle"></i> Brak zdjęć
                             </p>
                         {% endif %}
-                        
+
+
                         <!-- Edit button for editors -->
                         {% if user|can_edit_obiekt:obiekt %}
                             <div class="text-center mt-3">
@@ -641,6 +615,7 @@
                     </div>
                 {% endfor %}
             </div>
+        </div>
             
             <!-- Pagination -->
             {% if page_obj.has_other_pages %}
@@ -648,12 +623,12 @@
                     <ul class="pagination justify-content-center mt-4">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.material %}&material={{ request.GET.material }}{% endif %}">
+                                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.imie_nazwisko_osoby_upamietnionej %}&imie_nazwisko_osoby_upamietnionej={{ request.GET.imie_nazwisko_osoby_upamietnionej }}{% endif %}">
                                     <i class="fas fa-angle-double-left"></i> Pierwsza
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.material %}&material={{ request.GET.material }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.imie_nazwisko_osoby_upamietnionej %}&imie_nazwisko_osoby_upamietnionej={{ request.GET.imie_nazwisko_osoby_upamietnionej }}{% endif %}">
                                     <i class="fas fa-angle-left"></i> Poprzednia
                                 </a>
                             </li>
@@ -667,12 +642,12 @@
                         
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.material %}&material={{ request.GET.material }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.imie_nazwisko_osoby_upamietnionej %}&imie_nazwisko_osoby_upamietnionej={{ request.GET.imie_nazwisko_osoby_upamietnionej }}{% endif %}">
                                     Następna <i class="fas fa-angle-right"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.material %}&material={{ request.GET.material }}{% endif %}">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wojewodztwo %}&wojewodztwo={{ request.GET.wojewodztwo }}{% endif %}{% if request.GET.powiat %}&powiat={{ request.GET.powiat }}{% endif %}{% if request.GET.typ_obiektu %}&typ_obiektu={{ request.GET.typ_obiektu }}{% endif %}{% if request.GET.imie_nazwisko_osoby_upamietnionej %}&imie_nazwisko_osoby_upamietnionej={{ request.GET.imie_nazwisko_osoby_upamietnionej }}{% endif %}">
                                     Ostatnia <i class="fas fa-angle-double-right"></i>
                                 </a>
                             </li>
