@@ -592,9 +592,11 @@
                         {% if obiekt.zdjecia.all %}
                             <div class="photos">
                                 {% for zdjecie in obiekt.zdjecia.all %}
+                                <a href="{% url 'szczegoly_obiektu' obiekt.id %}">
                                     <img src="{{ zdjecie.plik.url }}"
                                          alt="Zdjęcie {{ obiekt.nazwa_geograficzna_polska }}"
                                          title="Kliknij aby powiększyć">
+                                </a>
                                 {% endfor %}
                             </div>
                         {% else %}
