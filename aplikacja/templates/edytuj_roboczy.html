@@ -385,11 +385,17 @@
                         <h3><i class="fas fa-info-circle"></i> Informacje Podstawowe</h3>
                     </div>
                     {% if is_editor %}
-                        <!-- For editors, display form fields individually to handle status separately -->
+
                         {% for field in obiekt_form %}
                             {% if field.name != 'status' %}
                                 <div class="mb-3">
+                                    {% if field.name == 'nazwa_geograficzna_polska' or field.name == 'typ_obiektu' %}
+                                        <label class="form-label bold-label">
+                                            {{ field.label }}
+                                        </label>
+                                    {% else %}
                                     {{ field.label_tag }}
+                                    {% endif %}
                                     {{ field }}
                                     {% if field.help_text %}
                                         <div class="form-text">{{ field.help_text }}</div>
@@ -401,7 +407,7 @@
                             {% endif %}
                         {% endfor %}
                         
-                        <!-- Status field for editors -->
+                        <!-- Pole statusu dla edytorów -->
                         <div class="form-section">
                             <div class="section-header">
                                 <h3><i class="fas fa-flag"></i> Status Obiektu</h3>
@@ -418,7 +424,7 @@
                             </div>
                         </div>
                     {% else %}
-                        <!-- For regular users, display form normally (status is excluded) -->
+
                         {{ obiekt_form }}
                     {% endif %}
                 </div>
@@ -465,12 +471,12 @@
                         <i class="fas fa-times"></i> Anuluj
                     </a>
                     {% if is_editor %}
-                        <!-- For editors, show only save button -->
+
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="fas fa-save"></i> Zapisz
                         </button>
                     {% else %}
-                        <!-- For regular users, show both buttons -->
+
                         <button type="submit" name="zapisz_roboczy" class="btn btn-secondary btn-lg">
                             <i class="fas fa-save"></i> Zapisz jako Roboczy
                         </button>
