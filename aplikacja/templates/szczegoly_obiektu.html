@@ -232,16 +232,31 @@
             align-items: center;
             z-index: 2000;
             backdrop-filter: blur(5px);
+            overflow: hidden;
         }
-        
+
+        .lightbox-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
         .lightbox img {
             max-width: 90%;
             max-height: 90%;
             border-radius: 15px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
             border: 3px solid var(--light-brown);
+            cursor: move;
+            transition: transform 0.1s ease-out;
+            user-select: none;
+            -webkit-user-drag: none;
         }
-        
+
         .lightbox-close {
             position: absolute;
             top: 30px;
@@ -259,23 +274,95 @@
             justify-content: center;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+            z-index: 2001;
         }
-        
+
         .lightbox-close:hover {
             background: var(--dark-brown);
             transform: scale(1.1);
         }
-        
+
+        .lightbox-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(139, 69, 19, 0.9);
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 2001;
+        }
+
+        .lightbox-control-btn {
+            background: white;
+            color: var(--primary-brown);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .lightbox-control-btn:hover {
+            background: var(--primary-brown);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .lightbox-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .zoom-level {
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 16px;
+            min-width: 70px;
+            justify-content: center;
+        }
+
+        .lightbox-hint {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(139, 69, 19, 0.9);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 2001;
+        }
+
+        .lightbox-hint.show {
+            opacity: 1;
+        }
+
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
         }
-        
+
         .text-section .pole {
             min-height: 100px;
         }
-        
+
         .coordinates-info {
             background: linear-gradient(135deg, var(--beige) 0%, var(--cream) 100%);
             border: 2px solid var(--light-brown);
@@ -283,7 +370,7 @@
             padding: 20px;
             margin-bottom: 15px;
         }
-        
+
         .btn-edit {
             background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
             color: white;
@@ -304,18 +391,36 @@
             color: white;
             text-decoration: none;
         }
-        
+
         @media (max-width: 768px) {
             .zdjecia-container {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
-            
+
             .info-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .main-header h1 {
                 font-size: 2rem;
+            }
+
+            .lightbox-controls {
+                bottom: 15px;
+                padding: 10px 15px;
+                gap: 10px;
+            }
+
+            .lightbox-control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .zoom-level {
+                font-size: 14px;
+                min-width: 60px;
+                padding: 0 10px;
             }
         }
 </style>
@@ -590,33 +695,192 @@
     </div>
 
     <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" onclick="closeLightbox()">×</button>
-        <img id="lightbox-img" src="" alt="Powiększone zdjęcie">
+        <div class="lightbox-container">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <div class="lightbox-hint" id="lightbox-hint">
+                Użyj kółka myszy lub przycisków +/- aby powiększyć. Przeciągnij aby przesunąć obraz.
+            </div>
+            <img id="lightbox-img" src="" alt="Powiększone zdjęcie">
+            <div class="lightbox-controls">
+                <button class="lightbox-control-btn" onclick="zoomOut()" title="Pomniejsz">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <div class="zoom-level" id="zoom-level">100%</div>
+                <button class="lightbox-control-btn" onclick="zoomIn()" title="Powiększ">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="lightbox-control-btn" onclick="resetZoom()" title="Resetuj">
+                    <i class="fas fa-undo"></i>
+                </button>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
 {% block extra_js %}
     <script>
-        // Skrypt do powiększania zdjęć
+        // Zmienne do zarządzania zoomem i przesuwaniem
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX, startY;
+        let translateX = 0, translateY = 0;
+        let lightboxImg;
+        let hintTimeout;
+
         document.addEventListener('DOMContentLoaded', function() {
-            function openLightbox(imgSrc) {
-                const lightbox = document.getElementById('lightbox');
-                const lightboxImg = document.getElementById('lightbox-img');
-                if (lightboxImg) {
-                    lightboxImg.src = imgSrc;
-                    lightbox.style.display = 'flex';
-                } else {
-                    console.error('Element #lightbox-img not found');
+            lightboxImg = document.getElementById('lightbox-img');
+            const lightbox = document.getElementById('lightbox');
+
+            // Obsługa kółka myszy do zoomowania
+            lightbox.addEventListener('wheel', function(e) {
+                if (lightbox.style.display === 'flex') {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    zoom(delta);
                 }
-            }
+            }, { passive: false });
 
-            function closeLightbox() {
-                const lightbox = document.getElementById('lightbox');
-                lightbox.style.display = 'none';
-            }
+            // Obsługa przeciągania obrazu
+            lightboxImg.addEventListener('mousedown', startDrag);
+            lightboxImg.addEventListener('touchstart', startDrag);
 
-            window.openLightbox = openLightbox;
-            window.closeLightbox = closeLightbox;
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag);
+
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchend', stopDrag);
+
+            // Zamykanie lightboxa przy kliknięciu tła
+            lightbox.addEventListener('click', function(e) {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            // Obsługa klawiatury
+            document.addEventListener('keydown', function(e) {
+                if (lightbox.style.display === 'flex') {
+                    if (e.key === 'Escape') {
+                        closeLightbox();
+                    } else if (e.key === '+' || e.key === '=') {
+                        zoomIn();
+                    } else if (e.key === '-') {
+                        zoomOut();
+                    } else if (e.key === '0') {
+                        resetZoom();
+                    }
+                }
+            });
         });
+
+        function openLightbox(imgSrc) {
+            const lightbox = document.getElementById('lightbox');
+            if (lightboxImg) {
+                lightboxImg.src = imgSrc;
+                lightbox.style.display = 'flex';
+                resetZoom();
+                showHint();
+            } else {
+                console.error('Element #lightbox-img not found');
+            }
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.style.display = 'none';
+            resetZoom();
+            clearTimeout(hintTimeout);
+        }
+
+        function showHint() {
+            const hint = document.getElementById('lightbox-hint');
+            hint.classList.add('show');
+            clearTimeout(hintTimeout);
+            hintTimeout = setTimeout(() => {
+                hint.classList.remove('show');
+            }, 3000);
+        }
+
+        function zoom(delta) {
+            currentZoom = Math.max(0.5, Math.min(5, currentZoom + delta));
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function zoomIn() {
+            zoom(0.2);
+        }
+
+        function zoomOut() {
+            zoom(-0.2);
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            updateZoomDisplay();
+        }
+
+        function updateTransform() {
+            if (lightboxImg) {
+                lightboxImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+
+        function updateZoomDisplay() {
+            const zoomLevel = document.getElementById('zoom-level');
+            if (zoomLevel) {
+                zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+            }
+        }
+
+        function startDrag(e) {
+            if (currentZoom <= 1) return; // Tylko gdy obraz jest powiększony
+
+            isDragging = true;
+            lightboxImg.style.cursor = 'grabbing';
+
+            if (e.type === 'touchstart') {
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            } else {
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+            }
+
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            e.preventDefault();
+
+            if (e.type === 'touchmove') {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+            } else {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+            }
+
+            updateTransform();
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            if (lightboxImg) {
+                lightboxImg.style.cursor = currentZoom > 1 ? 'move' : 'default';
+            }
+        }
+
+        // Eksportuj funkcje do globalnego scope
+        window.openLightbox = openLightbox;
+        window.closeLightbox = closeLightbox;
+        window.zoomIn = zoomIn;
+        window.zoomOut = zoomOut;
+        window.resetZoom = resetZoom;
     </script>
 {% endblock %}
